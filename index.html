@@ -1056,18 +1056,15 @@
             const { value: password } = await Swal.fire({
                 title: 'เข้าสู่ระบบ',
                 html: `
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 8px 0;">
-                        <div style="width:56px;height:56px;border-radius:50%;background:#f0faf0;display:flex;align-items:center;justify-content:center;color:#00b900;font-size:24px;">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                        <div style="font-size:13px;color:#888;">กรุณากรอกรหัสผ่านเพื่อใช้งานระบบ</div>
-                        <div class="password-wrapper" style="width:100%;max-width:300px;margin-top:4px;">
-                            <input id="swal-password" class="swal2-input" type="password" placeholder="••••••••" autocomplete="current-password" autofocus
-                                style="margin:0;width:100%;text-align:center;letter-spacing:3px;font-size:18px;padding:12px 44px 12px 16px !important;">
+                    <div style="padding:6px 0 0;">
+                        <div class="password-wrapper" style="max-width:280px;margin:0 auto;">
+                            <input id="swal-password" class="swal2-input" type="password" placeholder="รหัสผ่าน" autocomplete="current-password" autofocus
+                                style="margin:0;width:100%;text-align:center;font-size:16px;padding:12px 44px 12px 16px !important;">
                             <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="แสดง/ซ่อนรหัสผ่าน">
                                 <i class="fas fa-eye" id="passwordToggleIcon"></i>
                             </button>
                         </div>
+                        <div style="font-size:11px;color:#aaa;margin-top:8px;">กด Enter เพื่อเข้าสู่ระบบ</div>
                     </div>
                 `,
                 confirmButtonText: 'เข้าสู่ระบบ',
@@ -1075,6 +1072,8 @@
                 showCancelButton: true,
                 focusConfirm: false,
                 customClass: { popup: 'login-popup' },
+                width: '360px',
+                padding: '20px',
                 preConfirm: () => {
                     const pwd = document.getElementById('swal-password').value.trim();
                     if (!pwd) {
@@ -1681,9 +1680,9 @@
         async function markThreadAsRead(userId) {
             lastSeenIn[userId] = new Date().toISOString();
             saveLastSeenIn();
-            pollGlobalInbox();
-            // ยิงไป backend เพื่อมาร์คว่าอ่านแล้ว (persistent ข้ามเครื่อง)
+            // ยิงไป backend เพื่อมาร์คว่าอ่านแล้ว (persistent ข้ามเครื่อง) — ทำก่อน poll เพื่อให้ badge อัปเดตตรง
             try { await callGas('markAsRead', { userId }); } catch (_) {}
+            pollGlobalInbox();
         }
 
         function updateInboxBadge(count) {
@@ -1760,13 +1759,16 @@
                     const prefix = c.lastDirection === 'out' ? '↩ ' : '';
                     let statusHtml = '';
                     if (c.lastDirection === 'out') {
+                        // ปลายทางอ่าน = มี in ตอบกลับหลัง out แล้ว (c.lastOutStatus)
                         if (c.lastOutStatus === 'read') {
                             statusHtml = '<span style="color:#00b900;font-size:10px;font-weight:600;"><i class="fas fa-check-double"></i> อ่านแล้ว</span>';
                         } else {
                             statusHtml = '<span style="color:#999;font-size:10px;"><i class="fas fa-check"></i> ส่งแล้ว</span>';
                         }
                     } else if (isUnread) {
-                        statusHtml = '<span style="color:#00b900;font-size:10px;font-weight:600;">● ยังไม่ได้อ่าน</span>';
+                        statusHtml = '<span style="color:#ff3b30;font-size:10px;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน</span>';
+                    } else {
+                        statusHtml = '<span style="color:#999;font-size:10px;"><i class="fas fa-eye"></i> อ่านแล้ว</span>';
                     }
                     return `
                         <div class="msg received" style="cursor:pointer;max-width:100%;"
@@ -1802,9 +1804,11 @@
             document.getElementById('threadName').textContent = displayName;
             document.getElementById('threadAvatar').src = pictureUrl || '';
             document.getElementById('threadModal').classList.add('show');
-            // มาร์คว่าอ่านแล้วทันที (persistent บน Sheet) ก่อนโหลดข้อความ
+            // มาร์คว่าอ่านแล้วทันที (persistent บน Sheet) ก่อนโหลดข้อความ — สำหรับ in เท่านั้น, out รอปลายทางตอบกลับ
             await markThreadAsRead(userId);
             await refreshThread();
+            // เผื่อ Sheets ยังไม่ flush ให้รีเฟรชซ้ำอีกครั้งหลัง 1 วิ เพื่อให้เห็น อ่านแล้ว ทันที
+            setTimeout(() => { if (currentThreadUserId === userId) refreshThread(); }, 900);
             if (window._threadPoll) clearInterval(window._threadPoll);
             window._threadPoll = setInterval(refreshThread, 4000);
         }
