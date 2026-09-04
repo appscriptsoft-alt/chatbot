@@ -150,6 +150,23 @@
             transform: scale(0.92);
         }
 
+        .line-header .actions button.active-sleep {
+            background: rgba(255, 235, 59, 0.30);
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.3) inset;
+        }
+
+        .line-app.sleeping {
+            filter: grayscale(0.15);
+        }
+        .line-app.sleeping .line-header {
+            background: #6c757d;
+        }
+        .line-app.sleeping .status .dot {
+            background: #adb5bd !important;
+            animation: none !important;
+        }
+
         /* ──────────────── Chat Area ──────────────── */
         .chat-area {
             flex: 1;
@@ -946,6 +963,7 @@
                 <span id="statusText">ONLINE</span>
             </div>
             <div class="actions">
+                <button id="sleepBtn" onclick="toggleSleep()" title="โหมดหลับ - พักการแจ้งเตือน"><i class="fas fa-moon"></i></button>
                 <button onclick="clearChat()" title="ล้างแชท"><i class="fas fa-eraser"></i></button>
             </div>
         </header>
@@ -1000,6 +1018,7 @@
             <div class="modal-header">
                 <img id="threadAvatar" src="https://ui-avatars.com/api/?name=Inbox&background=00b900&color=fff&size=80&bold=true" alt="" onerror="this.src='https://via.placeholder.com/80/00b900/ffffff?text=LINE'" />
                 <h3 id="threadName">-</h3>
+                <button class="close-btn" onclick="toggleSleep()" title="โหมดหลับ - พักการแจ้งเตือน" style="font-size:14px;"><i class="fas fa-moon"></i></button>
                 <button class="close-btn" onclick="closeThread()">✕</button>
             </div>
             <div class="modal-body" id="threadMessages"></div>
@@ -1051,6 +1070,8 @@
         let currentUser = null;
         let threadImageBase64 = null;
         let threadImageFile = null;
+        let isSleeping = false;
+        try { isSleeping = localStorage.getItem('lineBotSleep') === 'true'; } catch(_) {}
 
         /* ──────────────── SWEETALERT LOGIN (เทาะ สะอาด ไม่โชว์รหัส) ──────────────── */
         async function showLogin() {
@@ -1059,15 +1080,24 @@
                 html: `
                     <div style="padding:6px 0 0;">
                         <div class="password-wrapper" style="max-width:280px;margin:0 auto;">
-                            <input id="swal-password" class="swal2-input" type="password" placeholder="รหัสผ่าน" autocomplete="current-password" autofocus
-                                style="margin:0;width:100%;text-align:center;font-size:16px;padding:12px 44px 12px 16px !important;">
+                            <input id="swal-password" class="swal2-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="รหัสผ่าน (ตัวเลข 6 หลัก)" autocomplete="current-password" autofocus
+                                oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="margin:0;width:100%;text-align:center;font-size:16px;letter-spacing:6px;padding:12px 44px 12px 16px !important;">
                             <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="แสดง/ซ่อนรหัสผ่าน">
                                 <i class="fas fa-eye" id="passwordToggleIcon"></i>
                             </button>
                         </div>
-                        <div style="font-size:11px;color:#aaa;margin-top:8px;">กด Enter เพื่อเข้าสู่ระบบ</div>
+                        <div style="font-size:11px;color:#aaa;margin-top:8px;">กรอกได้เฉพาะตัวเลข 6 หลัก • กด Enter เพื่อเข้าสู่ระบบ</div>
                     </div>
                 `,
+                didOpen: () => {
+                    const inp = document.getElementById('swal-password');
+                    if (inp) {
+                        inp.addEventListener('input', () => { inp.value = inp.value.replace(/[^0-9]/g,'').slice(0,6); });
+                        inp.addEventListener('keypress', (e) => { if (e.key === 'Enter') Swal.clickConfirm(); });
+                        // บังคับเปิดแป้นตัวเลขบนมือถือ
+                        inp.focus();
+                    }
+                },
                 confirmButtonText: 'เข้าสู่ระบบ',
                 cancelButtonText: 'ยกเลิก',
                 showCancelButton: true,
@@ -1076,9 +1106,18 @@
                 width: '360px',
                 padding: '20px',
                 preConfirm: () => {
-                    const pwd = document.getElementById('swal-password').value.trim();
+                    const el = document.getElementById('swal-password');
+                    const pwd = (el ? el.value : '').trim();
                     if (!pwd) {
                         Swal.showValidationMessage('กรุณากรอกรหัสผ่าน');
+                        return false;
+                    }
+                    if (!/^[0-9]+$/.test(pwd)) {
+                        Swal.showValidationMessage('รหัสผ่านต้องเป็นตัวเลขเท่านั้น');
+                        return false;
+                    }
+                    if (pwd.length !== 6) {
+                        Swal.showValidationMessage('กรุณากรอกรหัสผ่าน 6 หลัก');
                         return false;
                     }
                     return pwd;
@@ -1150,11 +1189,38 @@
             await Swal.fire({
                 icon: 'error',
                 title: '❌ รหัสผ่านไม่ถูกต้อง',
-                text: 'กรุณากรอกรหัสผ่านให้ถูกต้อง',
+                text: 'กรุณากรอกรหัสผ่านให้ถูกต้อง (ต้องเป็นตัวเลข 6 หลัก)',
                 confirmButtonText: 'ลองใหม่'
             });
             showLogin();
         }
+
+        /* ──────────────── SLEEP MODE (โหมดหลับ - พักการแจ้งเตือน) ──────────────── */
+        function applySleepUI() {
+            const btn = document.getElementById('sleepBtn');
+            const app = document.getElementById('appContainer');
+            if (btn) {
+                btn.classList.toggle('active-sleep', isSleeping);
+                btn.innerHTML = isSleeping ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+                btn.title = isSleeping ? 'โหมดหลับอยู่ - คลิกเพื่อตื่น' : 'โหมดหลับ - พักการแจ้งเตือน';
+            }
+            if (app) app.classList.toggle('sleeping', isSleeping);
+            try { localStorage.setItem('lineBotSleep', isSleeping ? 'true' : 'false'); } catch(_){}
+        }
+        function toggleSleep() {
+            isSleeping = !isSleeping;
+            applySleepUI();
+            if (isSleeping) {
+                showToast('💤 เข้าสู่โหมดหลับ - พักเสียงและการแจ้งเตือน', 'info');
+                addSystemMessage('💤 <strong>โหมดหลับ</strong> — พักการแจ้งเตือนและเสียงไว้ชั่วคราว');
+            } else {
+                showToast('☀️ ตื่นแล้ว - กลับมาแจ้งเตือนปกติ', 'success');
+                addSystemMessage('☀️ <strong>ตื่นแล้ว</strong> — กลับมาแจ้งเตือนปกติ');
+                pollGlobalInbox();
+            }
+        }
+        // เรียกตอนโหลดเพื่อซิงค์สถานะ
+        setTimeout(applySleepUI, 100);
 
         /* ──────────────── HELPERS ──────────────── */
         function getTimestamp() {
@@ -1699,6 +1765,7 @@
         }
 
         function playNotifySound() {
+            if (isSleeping) return;
             try {
                 const ctx = new(window.AudioContext || window.webkitAudioContext)();
                 const o = ctx.createOscillator();
@@ -1728,19 +1795,21 @@
                 } else {
                     convs.forEach(c => { if (isConversationUnread(c)) unreadConversations++; });
                 }
-                // แจ้งเตือนเฉพาะเมื่อมีห้องที่ยังไม่อ่านใหม่ หรือข้อความใหม่
-                convs.forEach(c => {
-                    const unreadFlag = isConversationUnread(c);
-                    // key เปลี่ยนเมื่อ unreadCount หรือ timestamp เปลี่ยน เพื่อไม่พลาดกรณีมีข้อความใหม่ในห้องเดิม
-                    const key = c.userId + '|' + c.lastTimestamp + '|' + (c.unreadCount || 0);
-                    if (unreadFlag && !notifiedKeys.has(key)) {
-                        notifiedKeys.add(key);
-                        const preview = (c.lastText || '').slice(0, 40);
-                        const cnt = c.unreadCount > 1 ? ` (+${c.unreadCount} ข้อความ)` : '';
-                        showToast(`💬 ข้อความใหม่จาก ${c.displayName}${cnt}: ${preview}`);
-                        playNotifySound();
-                    }
-                });
+                // แจ้งเตือนเฉพาะเมื่อมีห้องที่ยังไม่อ่านใหม่ หรือข้อความใหม่ — ข้ามถ้าอยู่โหมดหลับ
+                if (!isSleeping) {
+                    convs.forEach(c => {
+                        const unreadFlag = isConversationUnread(c);
+                        // key เปลี่ยนเมื่อ unreadCount หรือ timestamp เปลี่ยน เพื่อไม่พลาดกรณีมีข้อความใหม่ในห้องเดิม
+                        const key = c.userId + '|' + c.lastTimestamp + '|' + (c.unreadCount || 0);
+                        if (unreadFlag && !notifiedKeys.has(key)) {
+                            notifiedKeys.add(key);
+                            const preview = (c.lastText || '').slice(0, 40);
+                            const cnt = c.unreadCount > 1 ? ` (+${c.unreadCount} ข้อความ)` : '';
+                            showToast(`💬 ข้อความใหม่จาก ${c.displayName}${cnt}: ${preview}`);
+                            playNotifySound();
+                        }
+                    });
+                }
                 // badge แสดงจำนวนข้อความยังไม่อ่านทั้งหมด (สมบูรณ์กว่าแค่นับห้อง)
                 updateInboxBadge(totalUnread);
                 // เก็บไว้ให้ loadInboxList ใช้ถ้าต้องการ
@@ -2044,6 +2113,7 @@
         /* ──────────────── INIT ──────────────── */
         async function initializeApp() {
             document.getElementById('appContainer').style.display = 'flex';
+            applySleepUI();
             await loadAiProviders();
             await checkStatus();
             setInterval(checkStatus, 30000);
@@ -2073,6 +2143,7 @@
         window.openThreadImageUpload = openThreadImageUpload;
         window.handleThreadImageUpload = handleThreadImageUpload;
         window.clearThreadImage = clearThreadImage;
+        window.toggleSleep = toggleSleep;
     </script>
 </body>
 </html>
