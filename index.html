@@ -793,6 +793,23 @@
             border-radius: 12px !important;
             font-weight: 500 !important;
         }
+
+        /* Login hint */
+        .login-hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 4px;
+            padding: 6px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border: 1px dashed #b3d9ff;
+        }
+
+        .login-hint strong {
+            color: var(--bg-header);
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -892,6 +909,10 @@
         /* ──────────────── CONFIG ──────────────── */
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzeKGBmX3uQh_4Q1xO_Y7udZGj6tbfipoCjxrytst43QK-dAb3hNKKHloVUbCfyR5fn/exec';
 
+        /* ──────────────── LOGIN CONFIG ──────────────── */
+        const VALID_PASSWORD = '654321';
+        const VALID_USERNAME = 'admin';
+
         /* ──────────────── DOM REFS ──────────────── */
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
@@ -913,9 +934,12 @@
                 html: `
                     <div style="text-align:left;margin-bottom:8px;">
                         <label style="font-weight:600;font-size:14px;color:#333;">👤 ชื่อผู้ใช้</label>
-                        <input id="swal-username" class="swal2-input" placeholder="กรอกชื่อผู้ใช้" autofocus>
+                        <input id="swal-username" class="swal2-input" placeholder="กรอกชื่อผู้ใช้" value="admin" autofocus>
                         <label style="font-weight:600;font-size:14px;color:#333;">🔑 รหัสผ่าน</label>
                         <input id="swal-password" class="swal2-input" type="password" placeholder="กรอกรหัสผ่าน">
+                        <div class="login-hint">
+                            💡 <strong>รหัสผ่าน: 654321</strong>
+                        </div>
                     </div>
                 `,
                 confirmButtonText: 'เข้าสู่ระบบ 🚀',
@@ -948,6 +972,22 @@
         }
 
         async function handleLogin(username, password) {
+            // ตรวจสอบรหัสผ่าน本地ก่อน (สามารถเชื่อมต่อ GAS ก็ได้)
+            if (password === VALID_PASSWORD && username === VALID_USERNAME) {
+                isAuthenticated = true;
+                currentUser = username;
+                await Swal.fire({
+                    icon: 'success',
+                    title: '🎉 เข้าสู่ระบบสำเร็จ!',
+                    text: `ยินดีต้อนรับ ${currentUser}`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                initializeApp();
+                return;
+            }
+
+            // ถ้ารหัสผ่านไม่ถูกต้อง ให้ลองตรวจสอบกับ GAS (เผื่อมีระบบอื่น)
             try {
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
@@ -970,24 +1010,20 @@
                         showConfirmButton: false
                     });
                     initializeApp();
-                } else {
-                    await Swal.fire({
-                        icon: 'error',
-                        title: '❌ เข้าสู่ระบบล้มเหลว',
-                        text: data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
-                        confirmButtonText: 'ลองใหม่'
-                    });
-                    showLogin(); // เรียกใหม่
+                    return;
                 }
             } catch (error) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: '❌ เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
-                    confirmButtonText: 'ลองใหม่'
-                });
-                showLogin();
+                // ถ้า GAS ไม่ตอบ ให้ใช้ local check แทน
             }
+
+            // ถ้าทุกอย่างล้มเหลว
+            await Swal.fire({
+                icon: 'error',
+                title: '❌ เข้าสู่ระบบล้มเหลว',
+                text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (รหัสผ่าน: 654321)',
+                confirmButtonText: 'ลองใหม่'
+            });
+            showLogin();
         }
 
         /* ──────────────── HELPERS ──────────────── */
