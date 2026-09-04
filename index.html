@@ -1,1187 +1,1244 @@
-<!-- index.html (standalone, pixel-art arcade theme — calls a GAS Web App /exec URL) -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🕹️LINE BOT MCP MCP</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LINE BOT MCP · Analytics Dashboard</title>
+    <!-- Font & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        :root {
-            --bg-space: #5c94fc; /* ท้องฟ้าสีฟ้า Mario */
-            --bg-screen: #14183f;
-            --bg-screen-2: #1c2154;
-            --ink: #eef3ff;
-            --ink-dim: #9aa4d6;
-            --accent-gold: #ffcc00;
-            --accent-cyan: #00e5ff;
-            --accent-green: #39ff88;
-            --accent-magenta: #ff3d81;
-            --border-dark: #05061a;
-            --px-display: 'Press Start 2P', monospace;
-            --px-body: 'VT323', monospace;
-            --ground-brown: #c84c0c;
-            --brick-red: #c84c0c;
-            --brick-dark: #a8400a;
-            --sky-top: #5c94fc;
-            --sky-bottom: #a4c2f4;
-        }
-
+        /* ─────────────────────────────────────────────
+           Root & Reset
+           ───────────────────────────────────────────── */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #0b0f18;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #1f2a3f;
+            --bg-input: #0b0f18;
+            --border-color: #2a3548;
+            --border-light: #3d4a60;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #60a5fa;
+            --accent-green: #22d3ee;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-pink: #ec4899;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --transition: 0.2s ease;
+        }
+
         body {
-            font-family: var(--px-body);
-            background-color: var(--sky-top);
-            background-image: linear-gradient(to bottom, #5c94fc 0%, #88b8fc 60%, #c8d8f8 100%);
-            height: 100vh;
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
             display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
+            padding: 20px;
+        }
+
+        /* ─────────────────────────────────────────────
+           Main Container
+           ───────────────────────────────────────────── */
+        .dashboard {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             position: relative;
+            min-height: 90vh;
+            max-height: 95vh;
         }
 
-        /* =============================================
-           พื้นหลังเคลื่อนไหวสไตล์ Mario (Parallax)
-           ============================================= */
-        .mario-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
+        /* ─────────────────────────────────────────────
+           Header / Nav
+           ───────────────────────────────────────────── */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+            flex-shrink: 0;
+            background: var(--bg-secondary);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand .logo {
+            font-size: 22px;
+        }
+
+        .brand h1 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 6px 16px 6px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse-dot 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+        }
+
+        .btn {
+            font-family: var(--font);
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 18px;
+            border-radius: var(--radius-xs);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            border-color: var(--border-light);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #0b0f18;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-blue-hover);
+            color: #0b0f18;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-sm {
+            font-size: 12px;
+            padding: 5px 12px;
+        }
+
+        /* ─────────────────────────────────────────────
+           Dashboard Grid
+           ───────────────────────────────────────────── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 0;
+            flex: 1;
             overflow: hidden;
+            min-height: 0;
         }
 
-        /* ก้อนเมฆ */
-        .clouds-layer {
-            position: absolute;
-            top: 5%;
-            left: 0;
-            width: 200%;
-            height: 30%;
+        /* ─── Main Panel ─── */
+        .main-panel {
+            padding: 24px 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-color);
+            min-height: 0;
+        }
+
+        .main-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+        .main-panel::-webkit-scrollbar-track {
             background: transparent;
-            animation: driftClouds 35s linear infinite;
-            z-index: 2;
         }
-        .cloud {
-            position: absolute;
-            background: #ffffff;
-            border-radius: 50%;
-            box-shadow: 
-                20px -8px 0 8px #ffffff,
-                -15px -2px 0 5px #ffffff,
-                8px 5px 0 4px #ffffff,
-                -25px 10px 0 6px #ffffff,
-                30px 5px 0 10px #ffffff;
-            width: 60px;
-            height: 30px;
-            opacity: 0.9;
-        }
-        .cloud1 { top: 15%; left: 10%; transform: scale(1.2); }
-        .cloud2 { top: 8%; left: 45%; transform: scale(0.9); }
-        .cloud3 { top: 25%; left: 75%; transform: scale(1.4); }
-        .cloud4 { top: 5%; left: 120%; transform: scale(1.1); }
-        .cloud5 { top: 18%; left: 150%; transform: scale(0.8); }
-
-        @keyframes driftClouds {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        .main-panel::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
         }
 
-        /* ภูเขาด้านหลัง */
-        .hills-layer {
-            position: absolute;
-            bottom: 25%;
-            left: 0;
-            width: 200%;
-            height: 40%;
-            animation: driftHills 80s linear infinite;
-            z-index: 1;
-        }
-        .hill {
-            position: absolute;
-            bottom: 0;
-            width: 0;
-            height: 0;
-            border-left: 120px solid transparent;
-            border-right: 120px solid transparent;
-            border-bottom: 100px solid #88c070;
-            filter: drop-shadow(0 10px 5px rgba(0,0,0,0.15));
-        }
-        .hill1 { left: 5%; border-bottom-color: #78b060; }
-        .hill2 { left: 25%; border-bottom-color: #a0d878; transform: scale(1.3); }
-        .hill3 { left: 55%; border-bottom-color: #68a050; transform: scale(0.9); }
-        .hill4 { left: 80%; border-bottom-color: #90c868; transform: scale(1.5); }
-        .hill5 { left: 110%; border-bottom-color: #80b858; }
-        .hill6 { left: 140%; border-bottom-color: #a8e080; transform: scale(1.1); }
-
-        @keyframes driftHills {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* พุ่มไม้ */
-        .bushes-layer {
-            position: absolute;
-            bottom: 22%;
-            left: 0;
-            width: 200%;
-            height: 15%;
-            animation: driftBushes 50s linear infinite;
-            z-index: 3;
-        }
-        .bush {
-            position: absolute;
-            bottom: 0;
-            width: 60px;
-            height: 35px;
-            background: #58a838;
-            border-radius: 50%;
-            box-shadow: 
-                15px -5px 0 8px #58a838,
-                -18px 0 0 5px #58a838,
-                25px 5px 0 10px #48a028;
-        }
-        .bush1 { left: 8%; }
-        .bush2 { left: 30%; transform: scale(1.2); }
-        .bush3 { left: 65%; }
-        .bush4 { left: 95%; transform: scale(0.8); }
-        .bush5 { left: 130%; }
-        .bush6 { left: 170%; transform: scale(1.1); }
-
-        @keyframes driftBushes {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* พื้นดิน */
-        .ground-layer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 200%;
-            height: 25%;
-            background: linear-gradient(to bottom, #e0b060 0%, #c8843c 20%, #a86028 100%);
-            border-top: 4px solid #78c040;
-            z-index: 4;
-            animation: driftGround 30s linear infinite;
-        }
-        /* ลายอิฐบนพื้น */
-        .ground-layer::before {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent 0px,
-                transparent 70px,
-                rgba(0,0,0,0.15) 70px,
-                rgba(0,0,0,0.15) 75px
-            );
-        }
-
-        @keyframes driftGround {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* เหรียญหมุน */
-        .coins-layer {
-            position: absolute;
-            bottom: 28%;
-            left: 0;
-            width: 200%;
-            height: 40px;
-            animation: driftCoins 45s linear infinite;
-            z-index: 5;
-        }
-        .coin {
-            position: absolute;
-            bottom: 0;
-            width: 20px;
-            height: 24px;
-            background: radial-gradient(circle at 30% 30%, #ffe48b, #f0b000);
-            border: 2px solid #b87400;
-            border-radius: 50%;
-            animation: spinCoin 1.5s linear infinite;
-            box-shadow: 0 0 8px rgba(255,215,0,0.7);
-            transform-origin: center;
-        }
-        .coin::after {
-            content: '⭐';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10px;
-            color: #b87400;
-            opacity: 0.6;
-        }
-        .coin1 { left: 12%; }
-        .coin2 { left: 38%; bottom: 15px; animation-duration: 1.8s; animation-delay: 0.2s; }
-        .coin3 { left: 72%; animation-duration: 1.2s; animation-delay: 0.5s; }
-        .coin4 { left: 105%; bottom: 8px; }
-        .coin5 { left: 145%; animation-duration: 2.1s; animation-delay: 0.7s; }
-
-        @keyframes driftCoins {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        @keyframes spinCoin {
-            0% { transform: rotateY(0deg); }
-            100% { transform: rotateY(360deg); }
-        }
-
-        /* เห็ด (Mushroom) */
-        .mushrooms-layer {
-            position: absolute;
-            bottom: 26%;
-            left: 0;
-            width: 200%;
-            height: 50px;
-            animation: driftMushrooms 55s linear infinite;
-            z-index: 6;
-        }
-        .mushroom {
-            position: absolute;
-            bottom: 0;
+        /* ─── Sidebar (Controls + Inbox) ─── */
+        .sidebar {
+            padding: 24px 20px;
+            background: var(--bg-secondary);
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
+            gap: 24px;
+            min-height: 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* ─────────────────────────────────────────────
+           Stats Cards
+           ───────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 6px;
+            color: var(--text-primary);
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+            display: inline-flex;
             align-items: center;
-        }
-        .mush-cap {
-            width: 28px;
-            height: 18px;
-            background: #e83030;
-            border-radius: 50% 50% 10% 10%;
-            border: 2px solid #a81010;
-            position: relative;
-            z-index: 2;
-            box-shadow: 0 -3px 0 #ff6060 inset;
-        }
-        .mush-cap::before,
-        .mush-cap::after {
-            content: '';
-            position: absolute;
-            width: 9px;
-            height: 9px;
-            background: #ffffff;
-            border-radius: 50%;
-            top: 4px;
-            box-shadow: 0 0 0 2px #f0d0d0;
-        }
-        .mush-cap::before { left: 4px; }
-        .mush-cap::after { right: 4px; }
-        .mush-stem {
-            width: 14px;
-            height: 12px;
-            background: #f8e8c0;
-            border: 2px solid #c8a860;
-            border-radius: 0 0 5px 5px;
-            margin-top: -2px;
-            z-index: 1;
-        }
-        .mush1 { left: 20%; }
-        .mush2 { left: 55%; transform: scale(0.8); }
-        .mush3 { left: 90%; transform: scale(1.1); }
-        .mush4 { left: 135%; }
-
-        @keyframes driftMushrooms {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            gap: 4px;
         }
 
-        /* ท่อ (Pipe) */
-        .pipes-layer {
-            position: absolute;
-            bottom: 25%;
-            left: 0;
-            width: 200%;
-            height: 60px;
-            animation: driftPipes 70s linear infinite;
-            z-index: 3;
+        .stat-change.positive {
+            color: var(--accent-green);
         }
-        .pipe {
-            position: absolute;
-            bottom: 0;
-            width: 36px;
-            height: 40px;
-            background: linear-gradient(to right, #38b830 0%, #30a028 30%, #208020 70%, #186818 100%);
-            border: 3px solid #104010;
-            border-radius: 5px 5px 0 0;
-            box-shadow: inset -5px 0 0 rgba(0,0,0,0.3);
-        }
-        .pipe::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: -6px;
-            width: 44px;
-            height: 14px;
-            background: #40c838;
-            border: 3px solid #104010;
-            border-radius: 4px;
-            box-shadow: inset -5px 0 0 rgba(0,0,0,0.2);
-        }
-        .pipe1 { left: 40%; }
-        .pipe2 { left: 78%; transform: scale(0.7); }
-        .pipe3 { left: 115%; transform: scale(1.1); }
-        .pipe4 { left: 160%; }
-
-        @keyframes driftPipes {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        .stat-change.negative {
+            color: #ef4444;
         }
 
-        /* ก้อนอิฐลอย */
-        .bricks-layer {
-            position: absolute;
-            bottom: 38%;
-            left: 0;
-            width: 200%;
-            height: 50px;
-            animation: driftBricks 60s linear infinite;
-            z-index: 4;
-        }
-        .brick {
-            position: absolute;
-            bottom: 0;
-            width: 32px;
-            height: 28px;
-            background: #c84c0c;
-            border: 3px solid #000;
-            box-shadow: inset -4px -4px 0 #a03808, inset 4px 4px 0 #e87030;
-        }
-        .brick::after {
-            content: '';
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            width: 8px;
-            height: 6px;
-            background: #a03808;
-            border-radius: 1px;
-            box-shadow: 14px 0 0 #a03808;
-        }
-        .brick1 { left: 18%; }
-        .brick2 { left: 48%; bottom: 10px; }
-        .brick3 { left: 85%; }
-        .brick4 { left: 125%; transform: scale(0.9); }
-        .brick5 { left: 150%; bottom: 5px; }
-
-        @keyframes driftBricks {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* =============================================
-           ส่วนของแอปพลิเคชัน (UI)
-           ============================================= */
-        .app-container {
-            width: 100%;
-            max-width: 480px;
-            height: 95vh;
-            background: var(--bg-screen);
-            border: 4px solid var(--border-dark);
-            box-shadow:
-                0 0 0 4px var(--accent-cyan),
-                0 0 0 8px var(--border-dark),
-                8px 8px 0 rgba(0,0,0,0.5);
+        /* ─────────────────────────────────────────────
+           Chat Area (Main)
+           ───────────────────────────────────────────── */
+        .chat-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
             display: flex;
             flex-direction: column;
+            flex: 1;
+            min-height: 280px;
             overflow: hidden;
-            position: relative;
-            z-index: 100;
         }
 
-        /* CRT scanline overlay */
-        .app-container::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                to bottom,
-                rgba(0,0,0,0.1) 0px,
-                rgba(0,0,0,0.1) 1px,
-                transparent 2px,
-                transparent 3px
-            );
-            z-index: 10;
-        }
-
-        .header {
-            background: var(--border-dark);
-            color: var(--accent-green);
-            padding: 14px 16px;
+        .chat-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
-            border-bottom: 4px solid var(--accent-cyan);
         }
 
-        .header h1 {
-            font-family: var(--px-display);
-            font-size: 12px;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-shadow: 2px 2px 0 #000;
+        .chat-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
         }
 
-        .header-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-family: var(--px-display);
-            font-size: 8px;
-            background: var(--bg-screen);
-            padding: 6px 10px;
-            border: 2px solid var(--accent-gold);
-            color: var(--accent-gold);
+        .chat-header .badge {
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--bg-primary);
+            color: var(--text-muted);
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            animation: blink 1s steps(2) infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0.2; }
-        }
-
-        .chat-area {
+        .chat-messages {
             flex: 1;
-            padding: 16px;
+            padding: 16px 18px;
             overflow-y: auto;
-            background:
-                linear-gradient(var(--bg-screen), var(--bg-screen)),
-                repeating-linear-gradient(45deg, var(--bg-screen-2) 0, var(--bg-screen-2) 2px, transparent 2px, transparent 24px);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--bg-primary);
+            min-height: 0;
         }
 
-        .chat-area::-webkit-scrollbar { width: 6px; }
-        .chat-area::-webkit-scrollbar-track { background: var(--bg-screen); }
-        .chat-area::-webkit-scrollbar-thumb { background: var(--accent-cyan); }
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
 
-        .message {
-            margin-bottom: 14px;
+        .msg {
             display: flex;
+            flex-direction: column;
+            max-width: 88%;
+            animation: fade-up 0.25s ease-out;
+        }
+
+        .msg.sent {
+            align-self: flex-end;
             align-items: flex-end;
         }
+        .msg.received {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+        .msg.ai {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
 
-        .message.sent { justify-content: flex-end; }
-        .message.received { justify-content: flex-start; }
-        .message.ai { justify-content: flex-start; }
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-        .message-bubble {
-            max-width: 82%;
-            padding: 10px 12px;
-            font-size: 16px;
-            line-height: 1.4;
-            color: var(--ink);
-            border: 3px solid var(--border-dark);
-            position: relative;
+        .msg-bubble {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            line-height: 1.6;
             word-break: break-word;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
         }
 
-        .message.sent .message-bubble {
-            background: var(--accent-green);
-            color: #06210f;
-            box-shadow: 3px 3px 0 var(--border-dark);
+        .msg.sent .msg-bubble {
+            background: var(--accent-blue);
+            color: #0b0f18;
+            border-color: var(--accent-blue);
+            border-bottom-right-radius: 4px;
+            border-bottom-left-radius: var(--radius-sm);
         }
 
-        .message.received .message-bubble {
-            background: var(--bg-screen-2);
-            box-shadow: 3px 3px 0 var(--border-dark);
-            border-color: var(--accent-cyan);
+        .msg.ai .msg-bubble {
+            border-color: var(--accent-purple);
         }
 
-        .message.ai .message-bubble {
-            background: #2a1440;
-            border-color: var(--accent-magenta);
-            box-shadow: 3px 3px 0 var(--border-dark);
+        .msg .timestamp {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
-        .message-meta {
-            font-family: var(--px-display);
-            font-size: 7px;
-            color: var(--ink-dim);
-            margin-top: 6px;
-        }
-
-        .timestamp {
-            font-size: 12px;
-            color: var(--ink-dim);
+        .msg .meta {
+            font-size: 10px;
+            color: var(--text-muted);
             margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .typing-indicator {
-            padding: 10px 14px;
-            background: var(--bg-screen-2);
-            border: 3px solid var(--accent-cyan);
-            display: inline-block;
-        }
-
-        .typing-dots { display: flex; gap: 5px; }
-        .typing-dots span {
-            width: 7px;
-            height: 7px;
-            background: var(--accent-cyan);
-            animation: typing 1.2s steps(1) infinite;
-        }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-6px); opacity: 1; }
-        }
-
-        .controls-bar {
             display: flex;
+            align-items: center;
             gap: 8px;
-            padding: 10px 16px 0;
-            background: var(--border-dark);
-            flex-wrap: wrap;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
         }
 
-        .pixel-select, .pixel-toggle {
-            font-family: var(--px-display);
-            font-size: 8px;
-            background: var(--bg-screen);
-            color: var(--accent-gold);
-            border: 2px solid var(--accent-gold);
-            padding: 6px 8px;
-            cursor: pointer;
+        .typing-dots {
+            display: flex;
+            gap: 4px;
         }
 
-        .pixel-select {
-            max-width: 200px;
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing-bounce 1.4s ease-in-out infinite;
         }
 
-        .pixel-toggle.on {
-            background: var(--accent-magenta);
-            color: #fff;
-            border-color: #fff;
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
         }
 
-        .input-area {
-            padding: 12px 16px 16px;
-            background: var(--border-dark);
+        @keyframes typing-bounce {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 10px;
+            padding: 12px 18px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-card);
             flex-shrink: 0;
         }
 
-        .input-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .input-row input {
+        .chat-input-row input {
             flex: 1;
-            padding: 10px 12px;
-            border: 3px solid var(--accent-cyan);
-            background: var(--bg-screen);
-            color: var(--ink);
-            outline: none;
-            font-family: var(--px-body);
-            font-size: 16px;
-        }
-
-        .input-row input::placeholder { color: var(--ink-dim); }
-
-        .input-row button {
-            font-family: var(--px-display);
-            font-size: 9px;
             padding: 10px 14px;
-            background: var(--accent-gold);
-            color: #1a1200;
-            border: 3px solid var(--border-dark);
-            box-shadow: 3px 3px 0 #000;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.05s;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
         }
 
-        .input-row button:active:not(:disabled) {
-            transform: translate(3px, 3px);
-            box-shadow: none;
+        .chat-input-row input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        .input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chat-input-row input::placeholder {
+            color: var(--text-muted);
+        }
 
-        .tools-bar {
+        /* ─────────────────────────────────────────────
+           Sidebar Components
+           ───────────────────────────────────────────── */
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar-section h4 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group .btn {
+            width: 100%;
+            justify-content: center;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .control-group .btn .badge {
+            background: var(--accent-pink);
+            color: #0b0f18;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 0 8px;
+            border-radius: 20px;
+            line-height: 18px;
+            margin-left: 4px;
+        }
+
+        .toggle-group {
             display: flex;
             gap: 6px;
-            padding: 10px 0 0;
-            flex-wrap: wrap;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xs);
+            padding: 4px;
+            border: 1px solid var(--border-color);
         }
 
-        .tools-bar button {
-            font-family: var(--px-display);
-            font-size: 7px;
+        .toggle-group .btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
             padding: 6px 8px;
-            background: var(--bg-screen);
-            border: 2px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-            cursor: pointer;
-            position: relative;
-        }
-
-        .tools-bar button:active {
-            transform: translate(2px, 2px);
-        }
-
-        .inbox-badge {
-            display: none;
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            min-width: 16px;
-            height: 16px;
-            padding: 0 4px;
-            background: var(--accent-magenta);
-            color: #fff;
-            border: 1px solid var(--border-dark);
-            font-family: var(--px-display);
-            font-size: 7px;
-            line-height: 16px;
-            text-align: center;
-            border-radius: 2px;
-            z-index: 5;
-        }
-
-        .inbox-item.unread {
-            border-color: var(--accent-magenta);
-        }
-
-        .inbox-item.unread .inbox-name::after {
-            content: ' ● ใหม่';
-            color: var(--accent-magenta);
-            font-size: 7px;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--border-dark);
-            color: var(--accent-gold);
-            border: 2px solid var(--accent-gold);
-            padding: 10px 16px;
-            font-family: var(--px-display);
-            font-size: 8px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 3000;
-            pointer-events: none;
-            max-width: 90vw;
-            text-align: center;
-        }
-
-        .toast.show { opacity: 1; }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(5,6,26,0.85);
-            display: none;
-            align-items: center;
             justify-content: center;
-            z-index: 2000;
+            border-radius: 4px;
         }
 
-        .modal-overlay.show { display: flex; }
+        .toggle-group .btn.active {
+            background: var(--accent-blue);
+            color: #0b0f18;
+        }
 
-        .modal {
-            background: var(--bg-screen);
-            border: 4px solid var(--accent-gold);
-            box-shadow: 6px 6px 0 var(--border-dark);
-            padding: 20px;
-            max-width: 400px;
-            width: 90%;
-            max-height: 80vh;
+        .toggle-group .btn:hover:not(.active) {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        select.pixel-select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 12px;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+
+        select.pixel-select optgroup {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .inbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
             overflow-y: auto;
         }
 
-        .modal h3 {
-            font-family: var(--px-display);
-            font-size: 11px;
-            margin-bottom: 14px;
-            color: var(--accent-gold);
+        .inbox-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        .inbox-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
         }
 
-        .modal textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 10px;
-            background: var(--bg-space);
-            color: var(--accent-green);
-            border: 2px solid var(--accent-cyan);
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 14px;
-            justify-content: flex-end;
-        }
-
-        .modal-actions button {
-            font-family: var(--px-display);
-            font-size: 8px;
-            padding: 8px 14px;
-            border: 2px solid var(--border-dark);
-            cursor: pointer;
-        }
-
-        .modal-actions .btn-primary { background: var(--accent-green); color: #06210f; }
-        .modal-actions .btn-secondary { background: var(--ink-dim); color: #1a1200; }
-
-        /* Inbox */
-        .inbox-modal .modal { max-width: 440px; height: 80vh; display: flex; flex-direction: column; padding: 16px; }
-        .inbox-list { flex: 1; overflow-y: auto; margin-top: 10px; }
         .inbox-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px;
-            border: 2px solid var(--accent-cyan);
-            background: var(--bg-screen-2);
-            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: var(--radius-xs);
+            border: 1px solid transparent;
+            background: var(--bg-primary);
             cursor: pointer;
+            transition: var(--transition);
         }
-        .inbox-item:active { transform: translate(2px, 2px); }
+
+        .inbox-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-color);
+        }
+
+        .inbox-item.unread {
+            border-color: var(--accent-pink);
+        }
+
         .inbox-avatar {
-            width: 36px;
-            height: 36px;
-            border: 2px solid var(--accent-gold);
-            object-fit: cover;
-            background: var(--bg-space);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
             flex-shrink: 0;
+            object-fit: cover;
         }
-        .inbox-info { flex: 1; min-width: 0; }
+
+        .inbox-info {
+            flex: 1;
+            min-width: 0;
+        }
+
         .inbox-name {
-            font-family: var(--px-display);
-            font-size: 8px;
-            color: var(--accent-gold);
-            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
         }
+
+        .inbox-item.unread .inbox-name::after {
+            content: ' ●';
+            color: var(--accent-pink);
+            font-size: 10px;
+        }
+
         .inbox-preview {
-            font-size: 15px;
-            color: var(--ink-dim);
+            font-size: 12px;
+            color: var(--text-muted);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .inbox-empty { padding: 30px 10px; text-align: center; color: var(--ink-dim); font-size: 15px; }
 
-        .thread-modal .modal { max-width: 440px; height: 82vh; display: flex; flex-direction: column; padding: 0; }
-        .thread-header {
+        .inbox-empty {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* ─────────────────────────────────────────────
+           Modal (Thread)
+           ───────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            background: var(--border-dark);
-            border-bottom: 3px solid var(--accent-gold);
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
-        .thread-header img {
-            width: 32px;
-            height: 32px;
-            border: 2px solid var(--accent-gold);
+
+        .modal-header img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
             object-fit: cover;
         }
-        .thread-header .thread-name {
-            font-family: var(--px-display);
-            font-size: 9px;
-            color: var(--accent-gold);
-            flex: 1;
-        }
-        .thread-header button {
-            font-family: var(--px-display);
-            font-size: 8px;
-            background: var(--bg-screen);
-            color: var(--accent-cyan);
-            border: 2px solid var(--accent-cyan);
-            padding: 6px 8px;
-            cursor: pointer;
-        }
-        .thread-messages { flex: 1; overflow-y: auto; padding: 14px; }
 
-        /* Quote reply */
-        .quote-reply-btn {
-            display: inline-block;
-            margin-top: 6px;
-            font-family: var(--px-display);
-            font-size: 7px;
-            background: transparent;
-            color: var(--accent-cyan);
-            border: 1px solid var(--accent-cyan);
-            padding: 3px 6px;
-            cursor: pointer;
+        .modal-header h3 {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 600;
         }
-        .quote-reply-btn:active { transform: translate(1px, 1px); }
+
+        .modal-header .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0 6px;
+        }
+
+        .modal-header .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--bg-primary);
+        }
+
+        .modal-body .msg {
+            max-width: 92%;
+        }
+
+        .quote-reply-btn {
+            font-size: 10px;
+            font-weight: 500;
+            background: transparent;
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            border-radius: var(--radius-xs);
+            padding: 2px 8px;
+            margin-top: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-block;
+        }
+
+        .quote-reply-btn:hover {
+            background: var(--accent-green);
+            color: #0b0f18;
+        }
 
         .quote-preview-bar {
             display: none;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            padding: 8px 12px;
-            background: var(--bg-screen-2);
-            border-top: 2px solid var(--accent-magenta);
-            font-size: 14px;
-            color: var(--ink-dim);
+            gap: 10px;
+            padding: 6px 16px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-muted);
+            flex-shrink: 0;
         }
+
         .quote-preview-bar .quote-text {
             flex: 1;
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            border-left: 3px solid var(--accent-magenta);
-            padding-left: 8px;
+            border-left: 3px solid var(--accent-pink);
+            padding-left: 10px;
         }
+
         .quote-preview-bar button {
             background: transparent;
             border: none;
-            color: var(--accent-magenta);
-            font-family: var(--px-display);
-            font-size: 10px;
+            color: var(--text-muted);
             cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
             flex-shrink: 0;
         }
 
-        .thread-reply-row {
-            display: flex;
-            gap: 8px;
-            padding: 10px 12px;
-            background: var(--border-dark);
-        }
-        .thread-reply-row input {
+        .modal-footer input {
             flex: 1;
-            padding: 8px 10px;
-            border: 2px solid var(--accent-cyan);
-            background: var(--bg-screen);
-            color: var(--ink);
-            font-family: var(--px-body);
-            font-size: 15px;
+            padding: 10px 14px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
             outline: none;
         }
-        .thread-reply-row button {
-            font-family: var(--px-display);
-            font-size: 8px;
-            padding: 8px 12px;
-            background: var(--accent-gold);
-            color: #1a1200;
-            border: 3px solid var(--border-dark);
-            box-shadow: 2px 2px 0 #000;
-            cursor: pointer;
-            white-space: nowrap;
+
+        .modal-footer input:focus {
+            border-color: var(--accent-blue);
         }
-        .thread-reply-row button:active { transform: translate(2px, 2px); box-shadow: none; }
+
+        .modal-footer .btn {
+            font-size: 12px;
+            padding: 10px 16px;
+        }
+
+        /* ─────────────────────────────────────────────
+           Toast
+           ───────────────────────────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px 24px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3000;
+            pointer-events: none;
+            max-width: 90vw;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.error {
+            border-color: #ef4444;
+            color: #f87171;
+        }
+        .toast.success {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* ─────────────────────────────────────────────
+           Responsive
+           ───────────────────────────────────────────── */
+        @media (max-width: 820px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .sidebar {
+                max-height: 320px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
         @media (max-width: 480px) {
-            .app-container { border-width: 3px; height: 100vh; }
+            body {
+                padding: 0;
+            }
+            .dashboard {
+                border-radius: 0;
+                border: none;
+                max-height: 100vh;
+                min-height: 100vh;
+            }
+            .navbar {
+                padding: 12px 16px;
+            }
+            .brand h1 {
+                font-size: 15px;
+            }
+            .main-panel {
+                padding: 16px;
+            }
+            .sidebar {
+                padding: 16px;
+                max-height: 260px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .stat-value {
+                font-size: 20px;
+            }
+            .chat-input-row {
+                padding: 8px 12px;
+                flex-wrap: wrap;
+            }
+            .chat-input-row input {
+                font-size: 13px;
+            }
+            .modal {
+                max-width: 95%;
+                max-height: 90vh;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- พื้นหลังเคลื่อนไหวสไตล์ Mario -->
-    <div class="mario-bg">
-        <div class="clouds-layer">
-            <div class="cloud cloud1"></div>
-            <div class="cloud cloud2"></div>
-            <div class="cloud cloud3"></div>
-            <div class="cloud cloud4"></div>
-            <div class="cloud cloud5"></div>
-        </div>
-        <div class="hills-layer">
-            <div class="hill hill1"></div>
-            <div class="hill hill2"></div>
-            <div class="hill hill3"></div>
-            <div class="hill hill4"></div>
-            <div class="hill hill5"></div>
-            <div class="hill hill6"></div>
-        </div>
-        <div class="bushes-layer">
-            <div class="bush bush1"></div>
-            <div class="bush bush2"></div>
-            <div class="bush bush3"></div>
-            <div class="bush bush4"></div>
-            <div class="bush bush5"></div>
-            <div class="bush bush6"></div>
-        </div>
-        <div class="pipes-layer">
-            <div class="pipe pipe1"></div>
-            <div class="pipe pipe2"></div>
-            <div class="pipe pipe3"></div>
-            <div class="pipe pipe4"></div>
-        </div>
-        <div class="bricks-layer">
-            <div class="brick brick1"></div>
-            <div class="brick brick2"></div>
-            <div class="brick brick3"></div>
-            <div class="brick brick4"></div>
-            <div class="brick brick5"></div>
-        </div>
-        <div class="coins-layer">
-            <div class="coin coin1"></div>
-            <div class="coin coin2"></div>
-            <div class="coin coin3"></div>
-            <div class="coin coin4"></div>
-            <div class="coin coin5"></div>
-        </div>
-        <div class="mushrooms-layer">
-            <div class="mushroom mush1">
-                <div class="mush-cap"></div>
-                <div class="mush-stem"></div>
-            </div>
-            <div class="mushroom mush2">
-                <div class="mush-cap"></div>
-                <div class="mush-stem"></div>
-            </div>
-            <div class="mushroom mush3">
-                <div class="mush-cap"></div>
-                <div class="mush-stem"></div>
-            </div>
-            <div class="mushroom mush4">
-                <div class="mush-cap"></div>
-                <div class="mush-stem"></div>
-            </div>
-        </div>
-        <div class="ground-layer"></div>
-    </div>
 
-    <div class="app-container">
-        <div class="header">
-            <h1>🕹️LINE BOT MCP</h1>
-            <div class="header-status">
-                <span class="status-dot"></span>
-                <span id="statusText">ONLINE</span>
-            </div>
-        </div>
+    <!-- ──── DASHBOARD ──── -->
+    <div class="dashboard">
 
-        <div class="chat-area" id="chatArea">
-            <div class="message received">
-                <div class="message-bubble">
-                    👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
-                    <small style="color: var(--ink-dim);">พิมพ์ข้อความเพื่อส่ง หรือใช้เครื่องมือด้านล่าง</small>
+        <!-- Navbar -->
+        <header class="navbar">
+            <div class="brand">
+                <span class="logo">📊</span>
+                <h1>LINE BOT MCP</h1>
+            </div>
+            <div class="nav-actions">
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">ONLINE</span>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="getProfile()">
+                    <i class="fas fa-user"></i> Profile
+                </button>
+                <button class="btn btn-sm" onclick="getFollowers()">
+                    <i class="fas fa-users"></i>
+                </button>
+                <button class="btn btn-sm" onclick="getQuota()">
+                    <i class="fas fa-chart-simple"></i>
+                </button>
+                <button class="btn btn-sm" onclick="clearChat()">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Grid -->
+        <div class="dashboard-grid">
+
+            <!-- ─── MAIN PANEL ─── -->
+            <div class="main-panel">
+
+                <!-- Stats -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-label">ข้อความที่ส่ง</div>
+                        <div class="stat-value" id="sentCount">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +12%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ข้อความที่รับ</div>
+                        <div class="stat-value" id="receivedCount">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +8%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ผู้ใช้</div>
+                        <div class="stat-value" id="userCount">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +5%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Quota</div>
+                        <div class="stat-value" id="quotaDisplay">-</div>
+                        <div class="stat-change" id="quotaChange">กำลังโหลด...</div>
+                    </div>
+                </div>
+
+                <!-- Chat -->
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <h3><i class="fas fa-comment-dots" style="color: var(--accent-blue);"></i> แชทสด</h3>
+                        <span class="badge" id="chatBadge">พร้อมใช้งาน</span>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="msg received">
+                            <div class="msg-bubble">
+                                👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
+                                <span style="color: var(--text-muted); font-size: 12px;">พิมพ์ข้อความเพื่อส่ง หรือใช้เครื่องมือด้านขวา</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+                        <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> ส่ง</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="controls-bar">
-            <button class="pixel-toggle" id="aiModeBtn" onclick="toggleAiMode()">🤖 AI: OFF</button>
-            <!-- ★ แก้ไข: เดิม hardcode รายชื่อรุ่นเฉพาะ Gemini ไว้ตรงนี้ ทำให้เลือก OpenAI/Claude
-                 จากหน้าเว็บไม่ได้ และค่าที่ส่งไป backend ไม่มี "provider" กำกับเลย
-                 ตอนนี้เปลี่ยนเป็นโหลดรายชื่อ provider/model จริงจาก backend (action getAIProviders)
-                 มาสร้าง option แบบ dynamic แทน (ดูฟังก์ชัน loadAiProviders() ด้านล่าง) -->
-            <select class="pixel-select" id="modelSelect">
-                <option value="">⏳ กำลังโหลดรายชื่อโมเดล...</option>
-            </select>
-        </div>
+            <!-- ─── SIDEBAR ─── -->
+            <div class="sidebar">
 
-        <div class="input-area">
-            <div class="input-row">
-                <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..."
-                       onkeypress="if(event.key === 'Enter') sendMessage()">
-                <button id="sendBtn" onclick="sendMessage()">ส่ง</button>
-            </div>
-            <div class="tools-bar">
-                <button onclick="getProfile()">👤 PROFILE</button>
-                <button onclick="getFollowers()">👥 FOLLOWERS</button>
-                <button onclick="getQuota()">📊 QUOTA</button>
-                <button onclick="openInbox()">📥 INBOX<span class="inbox-badge" id="inboxBadge"></span></button>
-                <button onclick="clearChat()">🗑️ CLEAR</button>
+                <!-- AI Controls -->
+                <div class="sidebar-section">
+                    <h4><i class="fas fa-robot" style="color: var(--accent-purple);"></i> AI Assistant</h4>
+                    <div class="control-group">
+                        <div class="toggle-group">
+                            <button class="btn active" id="aiModeBtn" onclick="toggleAiMode()">🤖 OFF</button>
+                            <button class="btn" id="aiOnBtn" onclick="toggleAiMode()">ON</button>
+                        </div>
+                        <select class="pixel-select" id="modelSelect">
+                            <option value="">⏳ กำลังโหลด...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-section">
+                    <h4><i class="fas fa-bolt" style="color: var(--accent-amber);"></i> เครื่องมือ</h4>
+                    <div class="control-group">
+                        <button class="btn" onclick="getProfile()"><i class="fas fa-user"></i> โปรไฟล์</button>
+                        <button class="btn" onclick="getFollowers()"><i class="fas fa-users"></i> ผู้ติดตาม</button>
+                        <button class="btn" onclick="getQuota()"><i class="fas fa-chart-simple"></i> Quota</button>
+                        <button class="btn" onclick="openInbox()" style="position: relative;">
+                            <i class="fas fa-inbox"></i> กล่องข้อความ
+                            <span class="badge" id="inboxBadge" style="display: none;">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inbox Preview -->
+                <div class="sidebar-section" style="flex:1; min-height:0;">
+                    <h4><i class="fas fa-envelope" style="color: var(--accent-pink);"></i> ข้อความล่าสุด</h4>
+                    <div class="inbox-list" id="inboxPreview">
+                        <div class="inbox-empty">ไม่มีข้อความ</div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Inbox: conversation list -->
-    <div class="modal-overlay inbox-modal" id="inboxListModal">
+    <!-- ──── THREAD MODAL ──── -->
+    <div class="modal-overlay" id="threadModal">
         <div class="modal">
-            <h3>📥 INBOX</h3>
-            <div class="inbox-list" id="inboxListContainer">
-                <div class="inbox-empty">กำลังโหลด...</div>
+            <div class="modal-header">
+                <img id="threadAvatar" src="" alt="" />
+                <h3 id="threadName">-</h3>
+                <button class="close-btn" onclick="closeThread()">✕</button>
             </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" onclick="closeInboxList()">ปิด</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Inbox: single conversation thread -->
-    <div class="modal-overlay thread-modal" id="inboxThreadModal">
-        <div class="modal">
-            <div class="thread-header">
-                <img id="threadUserAvatar" src="" alt="">
-                <span class="thread-name" id="threadUserName">-</span>
-                <button onclick="closeThread()">✕</button>
-            </div>
-            <div class="thread-messages" id="threadMessages"></div>
+            <div class="modal-body" id="threadMessages"></div>
             <div class="quote-preview-bar" id="quotePreviewBar">
                 <span class="quote-text"></span>
-                <button onclick="clearQuoteReply()">✕ ยกเลิก</button>
+                <button onclick="clearQuoteReply()">✕</button>
             </div>
-            <div class="thread-reply-row">
-                <input type="text" id="threadReplyInput" placeholder="พิมพ์ตอบกลับ..."
-                       onkeypress="if(event.key === 'Enter') sendThreadReply()">
-                <button id="aiSuggestBtn" onclick="suggestAiReply()" title="ให้ AI ร่างคำตอบมาใส่ในช่องพิมพ์ (ยังไม่ส่ง ต้องกดส่งเอง)">🤖 AI แนะนำ</button>
-                <button onclick="sendThreadReply()">ส่ง</button>
+            <div class="modal-footer">
+                <input type="text" id="threadReplyInput" placeholder="พิมพ์ตอบกลับ..." onkeypress="if(event.key === 'Enter') sendThreadReply()" />
+                <button class="btn" id="aiSuggestBtn" onclick="suggestAiReply()" style="background: var(--accent-purple); color: #0b0f18; border: none;">
+                    <i class="fas fa-wand-magic-sparkles"></i> AI
+                </button>
+                <button class="btn btn-primary" onclick="sendThreadReply()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- ──── TOAST ──── -->
     <div class="toast" id="toast"></div>
 
     <script>
-        // ★★★ ตั้งค่าตรงนี้: URL ของ GAS Web App ที่ Deploy แล้ว (ต้องลงท้ายด้วย /exec) ★★★
+        /* ──────────────── CONFIG ──────────────── */
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2WnkNz4_CYkaOPQXZGu6QDlF2xRw9gXaXm1c8t733xVhT627S3ySfO_Pp5eYJHQI/exec';
 
-        const chatArea = document.getElementById('chatArea');
+        /* ──────────────── DOM REFS ──────────────── */
+        const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const aiModeBtn = document.getElementById('aiModeBtn');
+        const aiOnBtn = document.getElementById('aiOnBtn');
         const modelSelect = document.getElementById('modelSelect');
+        const inboxPreview = document.getElementById('inboxPreview');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const toast = document.getElementById('toast');
+
         let aiMode = false;
 
-        function toggleAiMode() {
-            aiMode = !aiMode;
-            aiModeBtn.textContent = aiMode ? '🤖 AI: ON' : '🤖 AI: OFF';
-            aiModeBtn.classList.toggle('on', aiMode);
-            messageInput.placeholder = aiMode ? 'ถามอะไรก็ได้กับ AI...' : 'พิมพ์ข้อความ...';
-        }
-
+        /* ──────────────── HELPERS ──────────────── */
         function getTimestamp() {
             return new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
         }
 
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.borderColor = type === 'error' ? 'var(--accent-magenta)' : 'var(--accent-gold)';
-            toast.style.color = type === 'error' ? 'var(--accent-magenta)' : 'var(--accent-gold)';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str || '';
+            return d.innerHTML;
         }
 
+        function escapeAttr(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(msg, type = 'info') {
+            toast.textContent = msg;
+            toast.className = 'toast';
+            if (type === 'error') toast.classList.add('error');
+            else if (type === 'success') toast.classList.add('success');
+            toast.classList.add('show');
+            clearTimeout(toast._hide);
+            toast._hide = setTimeout(() => toast.classList.remove('show'), 2800);
+        }
+
+        function lineStatusLabel(data) {
+            return data.lineSent ? '📲 ส่งเข้า LINE แล้ว' : `⚠️ ไม่ได้ส่งเข้า LINE${data.lineError ? ' (' + data.lineError + ')' : ''}`;
+        }
+
+        /* ──────────────── CHAT UI ──────────────── */
         function addMessage(text, type = 'received', meta = '') {
             const div = document.createElement('div');
-            div.className = `message ${type}`;
+            div.className = `msg ${type}`;
             div.innerHTML = `
-                <div class="message-bubble">
+                <div class="msg-bubble">
                     ${text}
-                    ${meta ? `<div class="message-meta">${meta}</div>` : ''}
+                    ${meta ? `<div class="meta">${meta}</div>` : ''}
                     <div class="timestamp">${getTimestamp()}</div>
                 </div>
             `;
-            chatArea.appendChild(div);
-            chatArea.scrollTop = chatArea.scrollHeight;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
             return div;
         }
 
         function addTyping() {
             const div = document.createElement('div');
-            div.className = 'message received';
+            div.className = 'msg received';
             div.id = 'typingIndicator';
             div.innerHTML = `
                 <div class="typing-indicator">
+                    <span>กำลังพิมพ์</span>
                     <div class="typing-dots"><span></span><span></span><span></span></div>
                 </div>
             `;
-            chatArea.appendChild(div);
-            chatArea.scrollTop = chatArea.scrollHeight;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function removeTyping() {
-            const typing = document.getElementById('typingIndicator');
-            if (typing) typing.remove();
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
         }
 
-        function lineStatusLabel(data) {
-            return data.lineSent
-                ? '📲 ส่งเข้า LINE แล้ว'
-                : `⚠️ ไม่ได้ส่งเข้า LINE${data.lineError ? ' (' + data.lineError + ')' : ''}`;
+        function clearChat() {
+            chatMessages.innerHTML = `
+                <div class="msg received">
+                    <div class="msg-bubble">
+                        💬 แชทถูกล้างแล้ว<br>
+                        <span style="color: var(--text-muted); font-size: 12px;">พร้อมใช้งาน</span>
+                    </div>
+                </div>
+            `;
+            showToast('🗑️ ล้างแชทแล้ว', 'success');
         }
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
+        function updateStats(sent, received, users, quota) {
+            document.getElementById('sentCount').textContent = sent || 0;
+            document.getElementById('receivedCount').textContent = received || 0;
+            document.getElementById('userCount').textContent = users || 0;
+            if (quota !== undefined) {
+                document.getElementById('quotaDisplay').textContent = quota;
+                document.getElementById('quotaChange').textContent = quota > 80 ? '⚠️ ใกล้เต็ม' : '✅ เพียงพอ';
+                document.getElementById('quotaChange').className = 'stat-change ' + (quota > 80 ? 'negative' : 'positive');
+            }
         }
 
-        // เข้ารหัสสำหรับใส่ใน HTML attribute โดยเฉพาะ (escapeHtml เพียงอย่างเดียวไม่ครอบคลุม
-        // เครื่องหมายคำพูดเดี่ยว/คู่ในทุกเบราว์เซอร์ ซึ่งอันตรายถ้าเอาไปฝังใน onclick="...'${x}'...")
-        function escapeAttr(str) {
-            return String(str || '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+        /* ──────────────── AI MODE ──────────────── */
+        function toggleAiMode() {
+            aiMode = !aiMode;
+            aiModeBtn.textContent = aiMode ? '🤖 ON' : '🤖 OFF';
+            aiModeBtn.classList.toggle('active', aiMode);
+            aiOnBtn.classList.toggle('active', aiMode);
+            messageInput.placeholder = aiMode ? 'ถามอะไรก็ได้กับ AI...' : 'พิมพ์ข้อความ...';
         }
 
-        /**
-         * ★ ใหม่: โหลดรายชื่อ provider/model จริงจาก backend (action 'getAIProviders')
-         * แล้วสร้าง <optgroup> ต่อ 1 provider เพื่อให้ dropdown ตรงกับ AI_PROVIDERS_ ใน Code.gs
-         * เสมอ (ไม่ต้อง hardcode ชื่อรุ่นซ้ำสองที่ซึ่งเป็นสาเหตุที่ทำให้ก่อนหน้านี้
-         * เลือก Gemini รุ่นที่ backend ไม่รู้จัก และเลือก OpenAI/Claude จากหน้าเว็บไม่ได้เลย)
-         */
+        function getSelectedProviderModel() {
+            const val = modelSelect.value || '';
+            const sep = val.indexOf('::');
+            if (sep === -1) return { provider: undefined, model: val || undefined };
+            return { provider: val.slice(0, sep), model: val.slice(sep + 2) };
+        }
+
+        /* ──────────────── LOAD AI PROVIDERS ──────────────── */
         async function loadAiProviders() {
             try {
                 const data = await callGas('getAIProviders');
                 if (!data.success) {
-                    console.error('getAIProviders failed:', data.error);
-                    modelSelect.innerHTML = `<option value="">❌ โหลดไม่สำเร็จ: ${escapeHtml(data.error || 'unknown')}</option>`;
-                    showToast(`⚠️ โหลดรายชื่อโมเดล AI ไม่สำเร็จ: ${data.error || ''}`, 'error');
+                    modelSelect.innerHTML = `<option value="">❌ โหลดไม่สำเร็จ</option>`;
                     return;
                 }
                 const providers = data.providers;
                 const current = data.current || {};
                 modelSelect.innerHTML = '';
-
-                Object.keys(providers).forEach(providerKey => {
-                    const providerCfg = providers[providerKey];
-                    const optgroup = document.createElement('optgroup');
-                    optgroup.label = providerCfg.label;
-                    providerCfg.models.forEach(m => {
+                Object.keys(providers).forEach(pk => {
+                    const cfg = providers[pk];
+                    const group = document.createElement('optgroup');
+                    group.label = cfg.label;
+                    cfg.models.forEach(m => {
                         const opt = document.createElement('option');
-                        // ค่า option เก็บทั้ง provider และ model ไว้ด้วยกัน คั่นด้วย '::'
-                        // เพื่อให้ sendMessage()/suggestAiReply() ส่งทั้งสองค่าไป backend ตรงกันเสมอ
-                        opt.value = providerKey + '::' + m;
+                        opt.value = pk + '::' + m;
                         opt.textContent = m;
-                        if (providerKey === current.provider && m === current.model) {
-                            opt.selected = true;
-                        }
-                        optgroup.appendChild(opt);
+                        if (pk === current.provider && m === current.model) opt.selected = true;
+                        group.appendChild(opt);
                     });
-                    modelSelect.appendChild(optgroup);
+                    modelSelect.appendChild(group);
                 });
-
-                // เผื่อกรณี current.model ถูกตั้งค่าเอง (เช่นพิมพ์ผ่านเมนู LINE เป็นชื่อรุ่นที่ไม่อยู่ในลิสต์)
-                // ให้เพิ่ม option พิเศษเพื่อไม่ให้ dropdown เลือกผิด provider ไปเงียบๆ
                 const hasSelected = Array.from(modelSelect.options).some(o => o.selected);
                 if (!hasSelected && current.provider && current.model) {
                     const opt = document.createElement('option');
@@ -1191,51 +1248,183 @@
                     modelSelect.appendChild(opt);
                 }
             } catch (e) {
-                console.error('loadAiProviders exception:', e);
-                modelSelect.innerHTML = `<option value="">❌ เชื่อมต่อไม่ได้: ${escapeHtml(e.message || '')}</option>`;
-                showToast(`⚠️ เชื่อมต่อ GAS ไม่สำเร็จ: ${e.message || ''}`, 'error');
+                modelSelect.innerHTML = `<option value="">❌ เชื่อมต่อไม่ได้</option>`;
             }
         }
 
-        /**
-         * ★ ใหม่: แกะค่า provider/model จาก modelSelect.value (รูปแบบ "provider::model")
-         * เพื่อส่งทั้งสองค่านี้ไปกับทุก request ที่เรียก AI (askAI / suggestAI)
-         * ก่อนหน้านี้โค้ดส่งแค่ model เฉยๆ ทำให้ backend เอา provider ปัจจุบัน (ที่อาจถูกเปลี่ยน
-         * จากเมนู LINE เป็นคนละเจ้ากับที่หน้าเว็บเลือกไว้) มาจับคู่กับ model ผิดเจ้า แล้วเรียก AI พัง
-         */
-        function getSelectedProviderModel() {
-            const val = modelSelect.value || '';
-            const sep = val.indexOf('::');
-            if (sep === -1) return { provider: undefined, model: val || undefined };
-            return { provider: val.slice(0, sep), model: val.slice(sep + 2) };
+        /* ──────────────── GAS CALL ──────────────── */
+        async function callGas(action, payload = {}) {
+            const resp = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action, payload })
+            });
+            const raw = await resp.text();
+            try { return JSON.parse(raw); } catch (_) {
+                throw new Error(`Server error (${resp.status}): ${raw.slice(0, 150)}`);
+            }
         }
 
-        // ---------------- แจ้งเตือนข้อความใหม่แบบพื้นหลัง (ทำงานตลอด ไม่ต้องเปิด INBOX ก่อน) ----------------
-        // เก็บ "เวลาข้อความล่าสุดที่อ่านแล้ว" ต่อ userId ไว้ใน localStorage เพื่อให้จำได้แม้รีเฟรชหน้า
-        const NOTIFY_STORAGE_KEY = 'lineBotMcp_lastSeenIn_v1';
-        let lastSeenIn = {};
-        try {
-            lastSeenIn = JSON.parse(localStorage.getItem(NOTIFY_STORAGE_KEY) || '{}');
-        } catch (e) {
-            lastSeenIn = {};
+        /* ──────────────── SEND MESSAGE ──────────────── */
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'sent');
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            addTyping();
+
+            if (aiMode) {
+                try {
+                    const { provider, model } = getSelectedProviderModel();
+                    const data = await callGas('askAI', { question: text, provider, model });
+                    removeTyping();
+                    if (data.success) {
+                        addMessage(data.answer, 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`);
+                        showToast(data.lineSent ? '✅ ตอบแล้วและส่งเข้า LINE' : '⚠️ ตอบแล้ว แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ?
+                            'success' : 'error');
+                    } else {
+                        addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
+                        showToast('❌ AI ตอบไม่สำเร็จ', 'error');
+                    }
+                } catch (e) {
+                    removeTyping();
+                    addMessage(`❌ Connection error: ${e.message}`, 'received');
+                    showToast('❌ Connection error', 'error');
+                } finally {
+                    sendBtn.disabled = false;
+                }
+                return;
+            }
+
+            try {
+                const data = await callGas('sendText', { message: text });
+                removeTyping();
+                if (data.success) {
+                    addMessage('✅ ส่งข้อความสำเร็จ!', 'received', 'ส่งถึงผู้ใช้');
+                    showToast('✅ ส่งข้อความสำเร็จ', 'success');
+                } else {
+                    addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
+                    showToast('❌ ส่งข้อความไม่สำเร็จ', 'error');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Connection error: ${e.message}`, 'received');
+                showToast('❌ Connection error', 'error');
+            } finally {
+                sendBtn.disabled = false;
+            }
         }
-        // กันแจ้งเตือน (toast/เสียง) ซ้ำสำหรับข้อความเดียวกันในรอบ poll ถัดๆ ไประหว่างที่ยังไม่ได้เปิดอ่าน
+
+        /* ──────────────── TOOLS ──────────────── */
+        async function getProfile() {
+            addMessage('🔍 กำลังดึงข้อมูลโปรไฟล์...', 'received');
+            addTyping();
+            try {
+                const data = await callGas('getProfile');
+                removeTyping();
+                if (data.success && data.profile) {
+                    const p = data.profile;
+                    addMessage(`
+                        👤 <strong>${escapeHtml(p.displayName || 'N/A')}</strong><br>
+                        📱 ID: ${escapeHtml(p.userId || 'N/A')}<br>
+                        🌐 Language: ${escapeHtml(p.language || 'N/A')}<br>
+                        💬 Status: ${escapeHtml(p.statusMessage || 'No status')}<br>
+                        ${p.pictureUrl ? `<img src="${escapeAttr(p.pictureUrl)}" style="width:40px;margin-top:6px;border-radius:50%;border:2px solid var(--border-color);">` : ''}
+                    `, 'received', `👤 PROFILE · ${lineStatusLabel(data)}`);
+                    showToast(data.lineSent ? '✅ ดึงโปรไฟล์และส่งเข้า LINE แล้ว' : '⚠️ ดึงโปรไฟล์สำเร็จ แต่ส่ง LINE ไม่สำเร็จ',
+                        data.lineSent ? 'success' : 'error');
+                } else {
+                    addMessage(`❌ ${data.error || 'ไม่พบข้อมูล'}`, 'received');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Error: ${e.message}`, 'received');
+                showToast('❌ Error fetching profile', 'error');
+            }
+        }
+
+        async function getFollowers() {
+            addMessage('👥 กำลังดึงรายชื่อผู้ติดตาม...', 'received');
+            addTyping();
+            try {
+                const data = await callGas('getFollowers', { limit: 20 });
+                removeTyping();
+                if (data.success && data.data) {
+                    const ids = data.data.userIds || [];
+                    const next = data.data.next || 'ไม่มีต่อ';
+                    addMessage(`
+                        📊 พบผู้ติดตาม <strong>${ids.length}</strong> คน<br>
+                        🔄 Next token: ${next}<br>
+                        ${ids.slice(0, 5).map(id => `📱 ${escapeHtml(id)}`).join('<br>')}
+                        ${ids.length > 5 ? `<br>...และอีก ${ids.length - 5} คน` : ''}
+                    `, 'received', `👥 FOLLOWERS · ${lineStatusLabel(data)}`);
+                    showToast(data.lineSent ? `✅ พบ ${ids.length} คน และส่งเข้า LINE แล้ว` :
+                        `⚠️ พบ ${ids.length} คน แต่ส่ง LINE ไม่สำเร็จ`, data.lineSent ? 'success' : 'error');
+                } else {
+                    addMessage(`❌ ${data.error || 'ไม่พบข้อมูล'}`, 'received');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Error: ${e.message}`, 'received');
+                showToast('❌ Error fetching followers', 'error');
+            }
+        }
+
+        async function getQuota() {
+            addMessage('📊 กำลังตรวจสอบ Quota...', 'received');
+            addTyping();
+            try {
+                const data = await callGas('getQuota');
+                removeTyping();
+                if (data.success && data.quota) {
+                    const q = data.quota;
+                    const remaining = (q.limit != null && q.used != null) ? q.limit - q.used : 'N/A';
+                    addMessage(`
+                        📊 <strong>Message Quota</strong><br>
+                        📈 Limit: ${q.limit ?? 'N/A'}<br>
+                        📉 Used: ${q.used ?? 'N/A'}<br>
+                        📊 Remaining: ${remaining}
+                    `, 'received', `📊 QUOTA · ${lineStatusLabel(data)}`);
+                    showToast(data.lineSent ? '✅ Quota checked และส่งเข้า LINE แล้ว' : '⚠️ Quota checked แต่ส่ง LINE ไม่สำเร็จ',
+                        data.lineSent ? 'success' : 'error');
+                    // อัปเดต stats
+                    if (q.limit != null && q.used != null) {
+                        updateStats(null, null, null, Math.round((q.used / q.limit) * 100));
+                    }
+                } else {
+                    addMessage(`❌ ${data.error || 'ไม่สามารถดึงข้อมูล'}`, 'received');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Error: ${e.message}`, 'received');
+                showToast('❌ Quota error', 'error');
+            }
+        }
+
+        /* ──────────────── INBOX (Global Poll + Preview) ──────────────── */
+        const NOTIFY_STORAGE_KEY = 'lineBotMcp_lastSeenIn_v3';
+        let lastSeenIn = {};
+        try { lastSeenIn = JSON.parse(localStorage.getItem(NOTIFY_STORAGE_KEY) || '{}'); } catch (_) {}
         const notifiedKeys = new Set();
+        let currentThreadUserId = null;
+        let currentQuoteToken = null;
+        let currentQuotePreviewText = '';
 
         function saveLastSeenIn() {
-            try { localStorage.setItem(NOTIFY_STORAGE_KEY, JSON.stringify(lastSeenIn)); } catch (e) { /* no-op */ }
+            try { localStorage.setItem(NOTIFY_STORAGE_KEY, JSON.stringify(lastSeenIn)); } catch (_) {}
         }
 
         function isConversationUnread(c) {
             if (c.lastDirection !== 'in') return false;
-            const seenTs = lastSeenIn[c.userId];
-            return !seenTs || new Date(c.lastTimestamp) > new Date(seenTs);
+            const seen = lastSeenIn[c.userId];
+            return !seen || new Date(c.lastTimestamp) > new Date(seen);
         }
 
         function markThreadAsRead(userId) {
             lastSeenIn[userId] = new Date().toISOString();
             saveLastSeenIn();
-            pollGlobalInbox(); // อัปเดต badge ทันที ไม่ต้องรอรอบถัดไป
+            pollGlobalInbox();
         }
 
         function updateInboxBadge(count) {
@@ -1251,154 +1440,134 @@
 
         function playNotifySound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = new(window.AudioContext || window.webkitAudioContext)();
                 const o = ctx.createOscillator();
                 const g = ctx.createGain();
                 o.type = 'square';
                 o.frequency.value = 880;
-                g.gain.value = 0.05;
+                g.gain.value = 0.04;
                 o.connect(g);
                 g.connect(ctx.destination);
                 o.start();
-                setTimeout(() => { o.stop(); ctx.close(); }, 150);
-            } catch (e) {
-                // บางเบราว์เซอร์บล็อกเสียงถ้ายังไม่มี user interaction ก่อนหน้านี้ในหน้านี้ ปล่อยผ่านได้
-            }
+                setTimeout(() => { o.stop();
+                    ctx.close(); }, 150);
+            } catch (_) {}
         }
 
-        /**
-         * เช็คข้อความใหม่แบบพื้นหลัง ทำงานตลอดเวลาไม่ว่าจะเปิด modal ไหนอยู่หรือไม่
-         * ถ้าเจอข้อความ 'in' ที่ใหม่กว่าที่เคยอ่าน -> toast + เสียง + ขึ้น badge ที่ปุ่ม INBOX
-         */
         async function pollGlobalInbox() {
             try {
                 const data = await callGas('getConversations');
                 if (!data.success) return;
-                let unreadCount = 0;
-                data.conversations.forEach(c => {
+                let unread = 0;
+                const convs = data.conversations || [];
+                // อัปเดต stats
+                const totalUsers = convs.length;
+                const totalIn = convs.filter(c => c.lastDirection === 'in').length;
+                const totalOut = convs.filter(c => c.lastDirection === 'out').length;
+                updateStats(totalOut, totalIn, totalUsers, null);
+
+                // แสดง preview
+                if (convs.length === 0) {
+                    inboxPreview.innerHTML = `<div class="inbox-empty">ไม่มีข้อความ</div>`;
+                } else {
+                    inboxPreview.innerHTML = convs.slice(0, 5).map(c => {
+                        const isUnread = isConversationUnread(c);
+                        if (isUnread) unread++;
+                        const avatar = c.pictureUrl || '';
+                        const prefix = c.lastDirection === 'out' ? '↩ ' : '';
+                        return `
+                            <div class="inbox-item ${isUnread ? 'unread' : ''}"
+                                 data-user-id="${escapeAttr(c.userId)}"
+                                 data-display-name="${escapeAttr(c.displayName)}"
+                                 data-avatar="${escapeAttr(avatar)}"
+                                 onclick="openThread('${escapeAttr(c.userId)}', '${escapeAttr(c.displayName)}', '${escapeAttr(avatar)}')">
+                                ${avatar ? `<img class="inbox-avatar" src="${escapeAttr(avatar)}">` : `<div class="inbox-avatar"></div>`}
+                                <div class="inbox-info">
+                                    <div class="inbox-name">${escapeHtml(c.displayName)}</div>
+                                    <div class="inbox-preview">${prefix}${escapeHtml((c.lastText || '').slice(0, 40))}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // badge + toast
+                updateInboxBadge(unread);
+                convs.forEach(c => {
                     if (!isConversationUnread(c)) return;
-                    unreadCount++;
-                    const notifyKey = c.userId + '|' + c.lastTimestamp;
-                    if (!notifiedKeys.has(notifyKey)) {
-                        notifiedKeys.add(notifyKey);
+                    const key = c.userId + '|' + c.lastTimestamp;
+                    if (!notifiedKeys.has(key)) {
+                        notifiedKeys.add(key);
                         showToast(`💬 ข้อความใหม่จาก ${c.displayName}: ${(c.lastText || '').slice(0, 40)}`);
                         playNotifySound();
                     }
                 });
-                updateInboxBadge(unreadCount);
-                // ถ้า modal รายชื่อ inbox เปิดอยู่ รีเฟรชรายการให้ badge "ใหม่" ในลิสต์อัปเดตด้วย
-                if (document.getElementById('inboxListModal').classList.contains('show')) {
-                    refreshInboxList();
-                }
-            } catch (e) {
-                // เช็คพื้นหลังเงียบๆ ไม่ต้องโชว์ error รบกวน
-            }
+            } catch (_) {}
         }
 
         setInterval(pollGlobalInbox, 6000);
         pollGlobalInbox();
 
-        // ---------------- Inbox ----------------
-        let inboxPollInterval = null;
-        let currentThreadUserId = null;
-        // ข้อความที่กำลังจะ "ตอบกลับแบบ quote" อยู่ (quoteToken ของข้อความฝั่งผู้ใช้ที่กดเลือก)
-        let currentQuoteToken = null;
-        let currentQuotePreviewText = '';
-
-        async function openInbox() {
-            document.getElementById('inboxListModal').classList.add('show');
-            await refreshInboxList();
-            stopInboxPolling();
-            inboxPollInterval = setInterval(refreshInboxList, 4000);
-        }
-
-        function closeInboxList() {
-            document.getElementById('inboxListModal').classList.remove('show');
-            stopInboxPolling();
-        }
-
-        function stopInboxPolling() {
-            if (inboxPollInterval) {
-                clearInterval(inboxPollInterval);
-                inboxPollInterval = null;
+        /* ─── Open Inbox (sidebar button) ─── */
+        function openInbox() {
+            // เปิด thread modal แสดงรายการล่าสุด หรือถ้ามี unread ให้เปิดอันแรก
+            pollGlobalInbox();
+            const firstUnread = document.querySelector('.inbox-item.unread');
+            if (firstUnread) {
+                firstUnread.click();
+            } else {
+                const first = document.querySelector('.inbox-item');
+                if (first) first.click();
+                else showToast('📭 ไม่มีข้อความในกล่องรับ', 'info');
             }
         }
 
-        async function refreshInboxList() {
-            const container = document.getElementById('inboxListContainer');
-            try {
-                const data = await callGas('getConversations');
-                if (!data.success) {
-                    console.error('getConversations failed:', data.error);
-                    container.innerHTML = `<div class="inbox-empty">❌ ${escapeHtml(data.error || 'โหลดไม่สำเร็จ')}</div>`;
-                    return;
-                }
-                if (!data.conversations.length) {
-                    container.innerHTML = '<div class="inbox-empty">ยังไม่มีข้อความเข้ามา</div>';
-                    return;
-                }
-                // ใช้ data-* attribute (escape แบบ attribute-safe) + event delegation แทน
-                // การฝัง userId/displayName ลงใน onclick="..." ตรงๆ ซึ่งถ้าชื่อผู้ใช้มี
-                // เครื่องหมายคำพูดเดี่ยวจะทำให้ markup พังและกดตอบกลับไม่ได้
-                container.innerHTML = data.conversations.map(c => {
-                    const avatar = c.pictureUrl || '';
-                    const prefix = c.lastDirection === 'out' ? '↩ ' : '';
-                    const isUnread = isConversationUnread(c);
-                    return `
-                        <div class="inbox-item ${isUnread ? 'unread' : ''}"
-                             data-user-id="${escapeAttr(c.userId)}"
-                             data-display-name="${escapeAttr(c.displayName)}"
-                             data-avatar="${escapeAttr(avatar)}">
-                            ${avatar ? `<img class="inbox-avatar" src="${escapeAttr(avatar)}">` : `<div class="inbox-avatar"></div>`}
-                            <div class="inbox-info">
-                                <div class="inbox-name">${escapeHtml(c.displayName)}</div>
-                                <div class="inbox-preview">${prefix}${escapeHtml((c.lastText || '').slice(0, 50))}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (e) {
-                console.error('refreshInboxList exception:', e);
-                // ถ้ายังไม่เคยโหลดสำเร็จเลย (ยังค้างข้อความ "กำลังโหลด...") ให้โชว์ error แทน
-                // แต่ถ้าเคยโหลดรายการมาแล้ว (polling รอบถัดๆ ไปพัง) ไม่ต้องรบกวนด้วยการล้างของเดิมทิ้ง
-                if (container.innerHTML.includes('กำลังโหลด')) {
-                    container.innerHTML = `<div class="inbox-empty">❌ เชื่อมต่อไม่ได้: ${escapeHtml(e.message || '')}</div>`;
-                }
-            }
-        }
-
-        // event delegation: จับคลิกที่ .inbox-item แต่ละอันแล้วเปิด thread ของ userId นั้น
-        document.getElementById('inboxListContainer').addEventListener('click', function (e) {
-            const item = e.target.closest('.inbox-item');
-            if (!item) return;
-            openThread(item.dataset.userId, item.dataset.displayName, item.dataset.avatar);
-        });
-
+        /* ─── Thread ─── */
         async function openThread(userId, displayName, pictureUrl) {
             currentThreadUserId = userId;
             clearQuoteReply();
-            document.getElementById('threadUserName').textContent = displayName;
-            document.getElementById('threadUserAvatar').src = pictureUrl || '';
-            document.getElementById('inboxThreadModal').classList.add('show');
+            document.getElementById('threadName').textContent = displayName;
+            document.getElementById('threadAvatar').src = pictureUrl || '';
+            document.getElementById('threadModal').classList.add('show');
             await refreshThread();
-            // เปิดดูแล้ว = อ่านแล้ว จำเวลาปัจจุบันไว้กันแจ้งเตือนซ้ำ/เอาไอคอน "ใหม่" ออก
             markThreadAsRead(userId);
-            stopInboxPolling();
-            inboxPollInterval = setInterval(refreshThread, 3000);
+            // เริ่ม poll ข้อความในเธรด
+            if (window._threadPoll) clearInterval(window._threadPoll);
+            window._threadPoll = setInterval(refreshThread, 4000);
         }
 
         function closeThread() {
-            document.getElementById('inboxThreadModal').classList.remove('show');
+            document.getElementById('threadModal').classList.remove('show');
             currentThreadUserId = null;
             clearQuoteReply();
-            stopInboxPolling();
+            if (window._threadPoll) { clearInterval(window._threadPoll);
+                window._threadPoll = null; }
         }
 
-        // ---- Quote reply: กดเลือกข้อความของผู้ใช้เพื่อ "ตอบกลับแบบ quote" ----
-        function setQuoteReply(quoteToken, previewText) {
-            if (!quoteToken) return;
-            currentQuoteToken = quoteToken;
-            currentQuotePreviewText = previewText;
+        async function refreshThread() {
+            if (!currentThreadUserId) return;
+            try {
+                const data = await callGas('getMessages', { userId: currentThreadUserId });
+                if (!data.success) return;
+                const container = document.getElementById('threadMessages');
+                container.innerHTML = data.messages.map(m => `
+                    <div class="msg ${m.direction === 'out' ? 'sent' : 'received'}">
+                        <div class="msg-bubble">
+                            ${escapeHtml(m.text)}
+                            <div class="timestamp">${new Date(m.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+                            ${m.direction === 'in' && m.quoteToken ? `<button class="quote-reply-btn" data-quote-token="${escapeAttr(m.quoteToken)}" data-quote-text="${escapeAttr((m.text || '').slice(0, 60))}" onclick="handleQuoteClick(this)">↩ ตอบกลับข้อความนี้</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                container.scrollTop = container.scrollHeight;
+            } catch (_) {}
+        }
+
+        /* ─── Quote Reply ─── */
+        function setQuoteReply(token, preview) {
+            if (!token) return;
+            currentQuoteToken = token;
+            currentQuotePreviewText = preview;
             renderQuotePreviewBar();
             document.getElementById('threadReplyInput').focus();
         }
@@ -1424,49 +1593,21 @@
             setQuoteReply(btn.getAttribute('data-quote-token'), btn.getAttribute('data-quote-text'));
         }
 
-        async function refreshThread() {
-            if (!currentThreadUserId) return;
-            try {
-                const data = await callGas('getMessages', { userId: currentThreadUserId });
-                if (!data.success) return;
-                const container = document.getElementById('threadMessages');
-                container.innerHTML = data.messages.map(m => `
-                    <div class="message ${m.direction === 'out' ? 'sent' : 'received'}">
-                        <div class="message-bubble">
-                            ${escapeHtml(m.text)}
-                            <div class="timestamp">${new Date(m.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
-                            ${m.direction === 'in' && m.quoteToken ? `<button class="quote-reply-btn" data-quote-token="${escapeAttr(m.quoteToken)}" data-quote-text="${escapeAttr((m.text || '').slice(0, 60))}" onclick="handleQuoteClick(this)">↩ ตอบกลับข้อความนี้</button>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                container.scrollTop = container.scrollHeight;
-            } catch (e) {
-                // polling เงียบๆ
-            }
-        }
-
-        /**
-         * ให้ AI ช่วยร่างคำตอบ (action 'suggestAI' — ไม่ push เข้า LINE, ไม่ log ใดๆ)
-         * เอาไปใส่ในช่องพิมพ์ให้แอดมินอ่าน/แก้ก่อน แล้วกด "ส่ง" เองอีกที
-         * ถ้าแอดมินยังไม่ได้พิมพ์อะไรในช่อง จะหยิบข้อความล่าสุดฝั่งผู้ใช้ ('in')
-         * ในเธรดนี้มาเป็นคำถามให้ AI แทน
-         */
+        /* ─── Suggest AI Reply ─── */
         async function suggestAiReply() {
             if (!currentThreadUserId) return;
             const input = document.getElementById('threadReplyInput');
-            const suggestBtn = document.getElementById('aiSuggestBtn');
+            const btn = document.getElementById('aiSuggestBtn');
             let question = input.value.trim();
 
             if (!question) {
                 try {
-                    const msgsData = await callGas('getMessages', { userId: currentThreadUserId });
-                    if (msgsData.success && msgsData.messages.length) {
-                        const lastIn = [...msgsData.messages].reverse().find(m => m.direction === 'in');
+                    const msgs = await callGas('getMessages', { userId: currentThreadUserId });
+                    if (msgs.success && msgs.messages.length) {
+                        const lastIn = [...msgs.messages].reverse().find(m => m.direction === 'in');
                         question = lastIn ? lastIn.text : '';
                     }
-                } catch (e) {
-                    // ปล่อยผ่าน จะไปเช็ค question ว่างด้านล่าง
-                }
+                } catch (_) {}
             }
 
             if (!question) {
@@ -1474,11 +1615,10 @@
                 return;
             }
 
-            suggestBtn.disabled = true;
-            const originalLabel = suggestBtn.textContent;
-            suggestBtn.textContent = '🤖 กำลังคิด...';
+            btn.disabled = true;
+            const origLabel = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> คิด...';
             try {
-                // ★ แก้ไข: ส่งทั้ง provider และ model ที่แกะจาก dropdown แทนที่จะส่งแค่ model
                 const { provider, model } = getSelectedProviderModel();
                 const data = await callGas('suggestAI', { question, provider, model });
                 if (data.success) {
@@ -1487,14 +1627,15 @@
                 } else {
                     showToast(`❌ ${data.error || 'AI ร่างคำตอบไม่สำเร็จ'}`, 'error');
                 }
-            } catch (error) {
+            } catch (_) {
                 showToast('❌ Connection error', 'error');
             } finally {
-                suggestBtn.disabled = false;
-                suggestBtn.textContent = originalLabel;
+                btn.disabled = false;
+                btn.innerHTML = origLabel;
             }
         }
 
+        /* ─── Send Thread Reply ─── */
         async function sendThreadReply() {
             const input = document.getElementById('threadReplyInput');
             const text = input.value.trim();
@@ -1509,189 +1650,36 @@
                 } else {
                     showToast(`❌ ${data.error || 'ส่งไม่สำเร็จ'}`, 'error');
                 }
-            } catch (error) {
+            } catch (_) {
                 showToast('❌ Connection error', 'error');
             }
         }
 
-        /**
-         * เรียก GAS Web App /exec ด้วย action-based JSON
-         * ใช้ Content-Type: text/plain เพื่อเลี่ยง CORS preflight (OPTIONS)
-         */
-        async function callGas(action, payload = {}) {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action, payload })
-            });
-            const raw = await response.text();
-            try {
-                return JSON.parse(raw);
-            } catch (e) {
-                throw new Error(`Server returned non-JSON (HTTP ${response.status}): ${raw.slice(0, 150)}`);
-            }
-        }
-
-        async function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'sent');
-            messageInput.value = '';
-            sendBtn.disabled = true;
-            addTyping();
-
-            if (aiMode) {
-                try {
-                    // ★ แก้ไข: ส่งทั้ง provider และ model ที่แกะจาก dropdown แทนที่จะส่งแค่ model
-                    // (เดิมส่งแค่ model เฉยๆ ทำให้ backend เอา provider ปัจจุบันของ Script Properties
-                    // มาจับคู่กับชื่อ model ที่หน้าเว็บส่งมา ถ้าคนละเจ้ากันจะเรียก AI พัง)
-                    const { provider, model } = getSelectedProviderModel();
-                    const data = await callGas('askAI', { question: text, provider, model });
-                    removeTyping();
-                    if (data.success) {
-                        addMessage(data.answer, 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`);
-                        showToast(data.lineSent ? '✅ ตอบแล้วและส่งเข้า LINE' : '⚠️ ตอบแล้ว แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ? 'info' : 'error');
-                    } else {
-                        addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
-                        showToast('❌ AI ตอบไม่สำเร็จ', 'error');
-                    }
-                } catch (error) {
-                    removeTyping();
-                    addMessage(`❌ Connection error: ${error.message}`, 'received');
-                    showToast('❌ Connection error', 'error');
-                } finally {
-                    sendBtn.disabled = false;
-                }
-                return;
-            }
-
-            try {
-                const data = await callGas('sendText', { message: text });
-                removeTyping();
-
-                if (data.success) {
-                    addMessage('✅ ส่งข้อความสำเร็จ!', 'received', `ส่งถึงผู้ใช้`);
-                    showToast('✅ ส่งข้อความสำเร็จ');
-                } else {
-                    addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
-                    showToast('❌ ส่งข้อความไม่สำเร็จ', 'error');
-                }
-            } catch (error) {
-                removeTyping();
-                addMessage(`❌ Connection error: ${error.message}`, 'received');
-                showToast('❌ Connection error', 'error');
-            } finally {
-                sendBtn.disabled = false;
-            }
-        }
-
-        async function getProfile() {
-            addMessage('🔍 กำลังดึงข้อมูลโปรไฟล์...', 'received');
-            addTyping();
-            try {
-                const data = await callGas('getProfile');
-                removeTyping();
-                if (data.success && data.profile) {
-                    const p = data.profile;
-                    addMessage(`
-                        👤 <strong>${p.displayName || 'N/A'}</strong><br>
-                        📱 ID: ${p.userId || 'N/A'}<br>
-                        🌐 Language: ${p.language || 'N/A'}<br>
-                        💬 Status: ${p.statusMessage || 'No status'}<br>
-                        ${p.pictureUrl ? `<img src="${p.pictureUrl}" style="width:40px;margin-top:4px;">` : ''}
-                    `, 'received', `👤 PROFILE · ${lineStatusLabel(data)}`);
-                    showToast(data.lineSent ? '✅ ดึงโปรไฟล์และส่งเข้า LINE แล้ว' : '⚠️ ดึงโปรไฟล์สำเร็จ แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ? 'info' : 'error');
-                } else {
-                    addMessage(`❌ ไม่สามารถดึงข้อมูล: ${data.error || 'Unknown error'}`, 'received');
-                }
-            } catch (error) {
-                removeTyping();
-                addMessage(`❌ Error: ${error.message}`, 'received');
-                showToast('❌ Error fetching profile', 'error');
-            }
-        }
-
-        async function getFollowers() {
-            addMessage('👥 กำลังดึงรายชื่อผู้ติดตาม...', 'received');
-            addTyping();
-            try {
-                const data = await callGas('getFollowers', { limit: 20 });
-                removeTyping();
-                if (data.success && data.data) {
-                    const userIds = data.data.userIds || [];
-                    const next = data.data.next || 'ไม่มีต่อ';
-                    addMessage(`
-                        📊 พบผู้ติดตาม <strong>${userIds.length}</strong> คน<br>
-                        🔄 Next token: ${next}<br>
-                        ${userIds.slice(0, 5).map(id => `📱 ${id}`).join('<br>')}
-                        ${userIds.length > 5 ? `<br>...และอีก ${userIds.length - 5} คน` : ''}
-                    `, 'received', `👥 FOLLOWERS · ${lineStatusLabel(data)}`);
-                    showToast(data.lineSent ? `✅ พบ ${userIds.length} คน และส่งเข้า LINE แล้ว` : `⚠️ พบ ${userIds.length} คน แต่ส่ง LINE ไม่สำเร็จ`, data.lineSent ? 'info' : 'error');
-                } else {
-                    addMessage(`❌ ไม่พบข้อมูล: ${data.error || 'Unknown'}`, 'received');
-                }
-            } catch (error) {
-                removeTyping();
-                addMessage(`❌ Error: ${error.message}`, 'received');
-                showToast('❌ Error fetching followers', 'error');
-            }
-        }
-
-        async function getQuota() {
-            addMessage('📊 กำลังตรวจสอบ Quota...', 'received');
-            addTyping();
-            try {
-                const data = await callGas('getQuota');
-                removeTyping();
-                if (data.success && data.quota) {
-                    const q = data.quota;
-                    addMessage(`
-                        📊 <strong>Message Quota</strong><br>
-                        📈 Limit: ${q.limit ?? 'N/A'}<br>
-                        📉 Used: ${q.used ?? 'N/A'}<br>
-                        📊 Remaining: ${(q.limit != null && q.used != null) ? q.limit - q.used : 'N/A'}
-                    `, 'received', `📊 QUOTA · ${lineStatusLabel(data)}`);
-                    showToast(data.lineSent ? '✅ Quota checked และส่งเข้า LINE แล้ว' : '⚠️ Quota checked แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ? 'info' : 'error');
-                } else {
-                    addMessage(`❌ ${data.error || 'ไม่สามารถดึงข้อมูล'}`, 'received');
-                }
-            } catch (error) {
-                removeTyping();
-                addMessage(`❌ Error: ${error.message}`, 'received');
-                showToast('❌ Quota error', 'error');
-            }
-        }
-
-        function clearChat() {
-            chatArea.innerHTML = `
-                <div class="message received">
-                    <div class="message-bubble">
-                        💬 แชทถูกล้างแล้ว<br>
-                        <small style="color: var(--ink-dim);">พร้อมใช้งาน</small>
-                    </div>
-                </div>
-            `;
-            showToast('🗑️ ล้างแชทแล้ว');
-        }
-
+        /* ──────────────── STATUS ──────────────── */
         async function checkStatus() {
             try {
                 const data = await callGas('status');
-                document.getElementById('statusText').textContent = data.status === 'online' ? 'ONLINE' : 'OFFLINE';
+                if (data.status === 'online') {
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'ONLINE';
+                } else {
+                    statusDot.className = 'status-dot offline';
+                    statusText.textContent = 'OFFLINE';
+                }
                 if (!data.channelTokenConfigured) {
                     showToast('⚠️ Channel Token ไม่ได้ตั้งค่า', 'error');
                 }
-            } catch (e) {
-                document.getElementById('statusText').textContent = 'OFFLINE';
-                showToast('⚠️ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', 'error');
+            } catch (_) {
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = 'OFFLINE';
             }
         }
-        checkStatus();
-        loadAiProviders(); // ★ ใหม่: โหลด dropdown provider/model จาก backend ตอนเปิดหน้า
-        setInterval(checkStatus, 30000);
 
-        console.log('🕹️LINE BOT MCP MCP — pixel arcade edition ready with Mario background (provider/model sync fixed)');
+        /* ──────────────── INIT ──────────────── */
+        loadAiProviders();
+        checkStatus();
+        setInterval(checkStatus, 30000);
+        console.log('📊 LINE BOT MCP · Analytics Dashboard ready');
     </script>
 </body>
 </html>
