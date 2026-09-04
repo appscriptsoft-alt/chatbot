@@ -1669,12 +1669,16 @@
         }
 
         function isConversationUnread(c) {
+            // optimistic: ถ้าแอดมินเพิ่งเปิดอ่าน (lastSeen > lastTimestamp) ให้ถือว่าอ่านแล้วทันที
+            const lastSeen = lastSeenIn[c.userId] ? new Date(lastSeenIn[c.userId]).getTime() : 0;
+            const lastTime = new Date(c.lastTimestamp).getTime();
+            if (lastSeen > lastTime) return false;
             // ถ้า server ส่ง unreadCount/isUnread มา ให้ใช้ค่านั้น (persistent)
             if (typeof c.unreadCount === 'number') return c.unreadCount > 0;
             if (typeof c.isUnread === 'boolean') return c.isUnread;
             if (c.lastDirection !== 'in') return false;
             const seen = lastSeenIn[c.userId];
-            return !seen || new Date(c.lastTimestamp) > new Date(seen);
+            return !seen || lastTime > new Date(seen).getTime();
         }
 
         async function markThreadAsRead(userId) {
@@ -1759,16 +1763,16 @@
                     const prefix = c.lastDirection === 'out' ? '↩ ' : '';
                     let statusHtml = '';
                     if (c.lastDirection === 'out') {
-                        // ปลายทางอ่าน = มี in ตอบกลับหลัง out แล้ว (c.lastOutStatus)
+                        // ปลายทางอ่าน = มี in ตอบกลับหลัง out แล้ว (อ้างอิง LINE API)
                         if (c.lastOutStatus === 'read') {
-                            statusHtml = '<span style="color:#00b900;font-size:10px;font-weight:600;"><i class="fas fa-check-double"></i> อ่านแล้ว</span>';
+                            statusHtml = '<span style="color:#00b900;font-size:10px;font-weight:600;" title="LINE: ปลายทางตอบกลับแล้ว"><i class="fas fa-check-double"></i> ปลายทางอ่านแล้ว</span>';
                         } else {
-                            statusHtml = '<span style="color:#999;font-size:10px;"><i class="fas fa-check"></i> ส่งแล้ว</span>';
+                            statusHtml = '<span style="color:#999;font-size:10px;" title="LINE: รอปลายทางเปิดอ่าน"><i class="fas fa-check"></i> ส่งแล้ว</span>';
                         }
                     } else if (isUnread) {
                         statusHtml = '<span style="color:#ff3b30;font-size:10px;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน</span>';
                     } else {
-                        statusHtml = '<span style="color:#999;font-size:10px;"><i class="fas fa-eye"></i> อ่านแล้ว</span>';
+                        statusHtml = '<span style="color:#4caf50;font-size:10px;"><i class="fas fa-eye"></i> อ่านแล้ว</span>';
                     }
                     return `
                         <div class="msg received" style="cursor:pointer;max-width:100%;"
@@ -1828,17 +1832,22 @@
                 const data = await callGas('getMessages', { userId: currentThreadUserId });
                 if (!data.success) return;
                 const container = document.getElementById('threadMessages');
+                const lastSeenTs = lastSeenIn[currentThreadUserId] ? new Date(lastSeenIn[currentThreadUserId]).getTime() : 0;
                 container.innerHTML = data.messages.map(m => {
+                    const msgTime = new Date(m.timestamp).getTime();
+                    // optimistic: ถ้าแอดมินเพิ่งเปิด thread (lastSeen > msgTime) ให้ถือว่า in อ่านแล้วทันที แม้ server ยังไม่ flush
+                    const isIncomingRead = m.isRead || m.readStatus === 'read' || (m.direction === 'in' && lastSeenTs > msgTime);
                     let statusHtml = '';
                     if (m.direction === 'out') {
+                        // out = ส่งจาก inbox ไปปลายทาง — อ่านแล้วต้องอ้างอิง LINE API (มี in ตอบกลับหลัง out) ถึงจะขึ้น
                         if (m.readStatus === 'read') {
-                            statusHtml = '<div class="read-status read"><i class="fas fa-check-double"></i> อ่านแล้ว</div>';
+                            statusHtml = '<div class="read-status read" title="อ้างอิง LINE: มีข้อความตอบกลับหลังส่ง"><i class="fas fa-check-double"></i> ปลายทางอ่านแล้ว</div>';
                         } else {
-                            statusHtml = '<div class="read-status sent"><i class="fas fa-check"></i> ส่งแล้ว</div>';
+                            statusHtml = '<div class="read-status sent" title="รอปลายทางเปิดอ่าน/ตอบกลับ (อ้างอิง LINE webhook)"><i class="fas fa-check"></i> ส่งแล้ว</div>';
                         }
                     } else {
-                        // in = ข้อความจากผู้ใช้: แสดงว่าแอดมินเปิดอ่านหรือยัง (persistent)
-                        if (m.isRead || m.readStatus === 'read') {
+                        // in = ข้อความจากผู้ใช้: แสดงว่าแอดมินเปิดอ่านหรือยัง (persistent + optimistic)
+                        if (isIncomingRead) {
                             statusHtml = '<div class="read-status read" style="justify-content:flex-start;color:#4caf50;"><i class="fas fa-eye"></i> อ่านแล้ว</div>';
                         } else {
                             statusHtml = '<div class="read-status" style="justify-content:flex-start;color:#ff3b30;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน</div>';
