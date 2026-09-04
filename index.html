@@ -645,16 +645,27 @@
             font-size: 16px;
         }
 
+        /* ─── Modal Footer with Image Upload ─── */
         .modal-footer {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             padding: 8px 14px 14px;
             background: #f0f0f0;
             border-top: 1px solid #e0e0e0;
             flex-shrink: 0;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .modal-footer input {
+        .modal-footer .input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .modal-footer .input-wrapper input[type="text"] {
             flex: 1;
             padding: 10px 16px;
             border-radius: 24px;
@@ -664,10 +675,28 @@
             font-family: var(--font);
             font-size: 14px;
             outline: none;
+            min-width: 60px;
         }
 
-        .modal-footer input:focus {
+        .modal-footer .input-wrapper input[type="text"]:focus {
             border-color: var(--bg-header);
+        }
+
+        .modal-footer .image-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .modal-footer .image-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
         }
 
         .modal-footer .btn {
@@ -682,6 +711,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .modal-footer .btn-primary {
@@ -700,6 +730,38 @@
 
         .modal-footer .btn-ai:hover {
             background: #7c3aed;
+        }
+
+        /* ─── Image preview in modal footer ─── */
+        .modal-footer .image-preview {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px 4px 4px;
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
+        .modal-footer .image-preview img {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .modal-footer .image-preview .remove-image {
+            background: transparent;
+            border: none;
+            color: #ff3b30;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 4px;
+        }
+
+        .modal-footer .image-preview .remove-image:hover {
+            color: #cc0000;
         }
 
         /* ──────────────── Toast ──────────────── */
@@ -746,6 +808,12 @@
                 max-height: 92vh;
                 border-radius: 20px 20px 0 0;
             }
+            .modal-footer {
+                flex-wrap: wrap;
+            }
+            .modal-footer .input-wrapper {
+                flex: 1 1 100%;
+            }
         }
 
         @media (max-width: 400px) {
@@ -753,6 +821,7 @@
             .line-header .status { font-size: 10px; padding: 2px 10px 2px 6px; }
             .input-row input { font-size: 13px; padding: 8px 14px; }
             .input-row button { font-size: 13px; padding: 8px 14px; }
+            .modal-footer .btn { font-size: 12px; padding: 8px 12px; }
         }
 
         /* ──────────────── SweetAlert Override ──────────────── */
@@ -794,7 +863,6 @@
             font-weight: 500 !important;
         }
 
-        /* Login hint */
         .login-hint {
             font-size: 13px;
             color: var(--text-secondary);
@@ -811,7 +879,6 @@
             font-weight: 700;
         }
 
-        /* Password input wrapper */
         .password-wrapper {
             position: relative;
             width: 100%;
@@ -863,7 +930,6 @@
 
         <!-- Chat Area -->
         <div class="chat-area" id="chatMessages">
-            <!-- ข้อความเริ่มต้น (default) แสดงเป็นบับเบิลข้อความปกติ -->
             <div class="msg received">
                 <div class="msg-bubble">
                     👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
@@ -874,7 +940,6 @@
 
         <!-- Input Area -->
         <div class="input-area">
-            <!-- AI Controls -->
             <div class="ai-controls">
                 <button class="toggle-btn" id="aiModeBtn" onclick="toggleAiMode()">🤖 AI OFF</button>
                 <select class="pixel-select" id="modelSelect">
@@ -882,7 +947,6 @@
                 </select>
             </div>
 
-            <!-- Input Row -->
             <div class="input-row">
                 <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..."
                        onkeypress="if(event.key === 'Enter') sendMessage()" />
@@ -894,10 +958,8 @@
                 </button>
             </div>
 
-            <!-- Hidden file input -->
             <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
 
-            <!-- Tools -->
             <div class="tools-bar">
                 <button onclick="getProfile()"><i class="fas fa-user"></i> โปรไฟล์</button>
                 <button onclick="getFollowers()"><i class="fas fa-users"></i> ผู้ติดตาม</button>
@@ -923,11 +985,22 @@
                 <span class="quote-text"></span>
                 <button onclick="clearQuoteReply()">✕</button>
             </div>
-            <div class="modal-footer">
-                <input type="text" id="threadReplyInput" placeholder="พิมพ์ตอบกลับ..." onkeypress="if(event.key === 'Enter') sendThreadReply()" />
+            <div class="modal-footer" id="modalFooter">
+                <div class="input-wrapper">
+                    <input type="text" id="threadReplyInput" placeholder="พิมพ์ตอบกลับ..." onkeypress="if(event.key === 'Enter') sendThreadReply()" />
+                    <button class="image-btn" onclick="openThreadImageUpload()" title="แนบรูปภาพ">
+                        <i class="fas fa-image"></i>
+                    </button>
+                </div>
+                <div class="image-preview" id="threadImagePreview">
+                    <img id="threadPreviewImg" src="" alt="preview" />
+                    <button class="remove-image" onclick="clearThreadImage()">✕</button>
+                </div>
                 <button class="btn btn-ai" id="aiSuggestBtn" onclick="suggestAiReply()"><i class="fas fa-wand-magic-sparkles"></i> AI</button>
                 <button class="btn btn-primary" onclick="sendThreadReply()"><i class="fas fa-paper-plane"></i></button>
             </div>
+            <!-- Hidden file input for thread image -->
+            <input type="file" id="threadImageInput" accept="image/*" style="display:none;" onchange="handleThreadImageUpload(event)" />
         </div>
     </div>
 
@@ -937,9 +1010,8 @@
     <script>
         /* ──────────────── CONFIG ──────────────── */
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzeKGBmX3uQh_4Q1xO_Y7udZGj6tbfipoCjxrytst43QK-dAb3hNKKHloVUbCfyR5fn/exec';
-
-        /* ──────────────── LOGIN CONFIG ──────────────── */
         const VALID_PASSWORD = '654321';
+        const GOOGLE_DRIVE_FOLDER_ID = '10ycPVa0Z5M7T-Lrg7HDN63hijhtOth7r';
 
         /* ──────────────── DOM REFS ──────────────── */
         const chatMessages = document.getElementById('chatMessages');
@@ -954,6 +1026,8 @@
         let aiMode = false;
         let isAuthenticated = false;
         let currentUser = null;
+        let threadImageBase64 = null;
+        let threadImageFile = null;
 
         /* ──────────────── SWEETALERT LOGIN ──────────────── */
         async function showLogin() {
@@ -990,18 +1064,16 @@
             if (password) {
                 await handleLogin(password);
             } else {
-                // หากกดยกเลิก ให้แสดงข้อความและรอ login อีกครั้ง
                 await Swal.fire({
                     icon: 'info',
                     title: 'กรุณาเข้าสู่ระบบ',
                     text: 'คุณต้องกรอกรหัสผ่านเพื่อใช้งาน LINE BOT MCP',
                     confirmButtonText: 'ตกลง'
                 });
-                showLogin(); // เรียกใหม่
+                showLogin();
             }
         }
 
-        // ฟังก์ชัน toggle การแสดงรหัสผ่าน
         window.togglePasswordVisibility = function() {
             const input = document.getElementById('swal-password');
             const icon = document.getElementById('passwordToggleIcon');
@@ -1015,7 +1087,6 @@
         };
 
         async function handleLogin(password) {
-            // ตรวจสอบรหัสผ่าน
             if (password === VALID_PASSWORD) {
                 isAuthenticated = true;
                 currentUser = 'admin';
@@ -1030,18 +1101,13 @@
                 return;
             }
 
-            // ถ้ารหัสผ่านไม่ถูกต้อง ให้ลองตรวจสอบกับ GAS (เผื่อมีระบบอื่น)
             try {
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'login',
-                        payload: { password }
-                    })
+                    body: JSON.stringify({ action: 'login', payload: { password } })
                 });
                 const data = await response.json();
-
                 if (data.success) {
                     isAuthenticated = true;
                     currentUser = data.user || 'user';
@@ -1055,11 +1121,8 @@
                     initializeApp();
                     return;
                 }
-            } catch (error) {
-                // ถ้า GAS ไม่ตอบ ให้ใช้ local check แทน
-            }
+            } catch (error) {}
 
-            // ถ้าทุกอย่างล้มเหลว
             await Swal.fire({
                 icon: 'error',
                 title: '❌ รหัสผ่านไม่ถูกต้อง',
@@ -1099,16 +1162,35 @@
             return data.lineSent ? '📲 ส่งเข้า LINE แล้ว' : `⚠️ ไม่ได้ส่งเข้า LINE${data.lineError ? ' (' + data.lineError + ')' : ''}`;
         }
 
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        }
+
         /* ──────────────── CHAT UI ──────────────── */
         function addMessage(text, type = 'received', meta = '', imageUrl = null) {
             const div = document.createElement('div');
             div.className = `msg ${type}`;
-
             let imageHtml = '';
             if (imageUrl) {
                 imageHtml = `<img src="${escapeAttr(imageUrl)}" class="msg-image" onclick="window.open('${escapeAttr(imageUrl)}', '_blank')" />`;
             }
-
             div.innerHTML = `
                 <div class="msg-bubble">
                     ${text}
@@ -1161,7 +1243,24 @@
             showToast('🗑️ ล้างแชทแล้ว', 'success');
         }
 
-        /* ──────────────── IMAGE UPLOAD ──────────────── */
+        /* ──────────────── IMAGE UPLOAD TO GOOGLE DRIVE ──────────────── */
+        async function uploadImageToDrive(file) {
+            try {
+                const base64 = await fileToBase64(file);
+                const data = await callGas('uploadToDrive', {
+                    folderId: GOOGLE_DRIVE_FOLDER_ID,
+                    image: base64,
+                    filename: file.name || 'image.jpg',
+                    mimeType: file.type || 'image/jpeg'
+                });
+                return data;
+            } catch (error) {
+                console.error('Upload error:', error);
+                throw error;
+            }
+        }
+
+        /* ──────────────── IMAGE UPLOAD (Main Chat) ──────────────── */
         function openImageUpload() {
             document.getElementById('imageInput').click();
         }
@@ -1170,56 +1269,49 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Check file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB)', 'error');
                 event.target.value = '';
                 return;
             }
-
-            // Check file type
             if (!file.type.startsWith('image/')) {
                 showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
                 event.target.value = '';
                 return;
             }
 
-            // Show preview in chat
             const reader = new FileReader();
             reader.onload = function(e) {
                 const previewUrl = e.target.result;
-                addMessage('📷 ส่งรูปภาพ', 'sent', '', previewUrl);
-
-                // Upload to server
+                addMessage('📷 กำลังอัปโหลดรูป...', 'sent', '', previewUrl);
                 uploadImageToServer(file);
             };
             reader.readAsDataURL(file);
-
             event.target.value = '';
         }
 
         async function uploadImageToServer(file) {
             addTyping();
             try {
-                const base64 = await fileToBase64(file);
-                const data = await callGas('sendImage', {
-                    image: base64,
-                    filename: file.name,
-                    mimeType: file.type
-                });
+                const data = await uploadImageToDrive(file);
                 removeTyping();
 
-                if (data.success) {
-                    addSystemMessage('✅ ส่งรูปภาพสำเร็จ!');
-                    showToast('✅ ส่งรูปภาพสำเร็จ', 'success');
-
-                    // If LINE sent back a URL, show it
-                    if (data.imageUrl) {
-                        addMessage('📎 รูปภาพที่ส่ง', 'received', lineStatusLabel(data), data.imageUrl);
+                if (data.success && data.lh3Url) {
+                    // ส่งรูปเป็น type image ผ่าน LINE
+                    const sendData = await callGas('sendImage', {
+                        imageUrl: data.lh3Url,
+                        message: '📷 รูปภาพที่ส่ง'
+                    });
+                    if (sendData.success) {
+                        addSystemMessage('✅ ส่งรูปภาพสำเร็จ!');
+                        showToast('✅ ส่งรูปภาพสำเร็จ', 'success');
+                    } else {
+                        addMessage(`❌ ${sendData.error || 'ส่งรูปไม่สำเร็จ'}`, 'received');
+                        showToast('❌ ส่งรูปไม่สำเร็จ', 'error');
                     }
                 } else {
-                    addMessage(`❌ ${data.error || 'ส่งรูปภาพไม่สำเร็จ'}`, 'received');
-                    showToast('❌ ส่งรูปภาพไม่สำเร็จ', 'error');
+                    addMessage(`❌ ${data.error || 'อัปโหลดไม่สำเร็จ'}`, 'received');
+                    showToast('❌ อัปโหลดรูปไม่สำเร็จ', 'error');
                 }
             } catch (e) {
                 removeTyping();
@@ -1228,13 +1320,44 @@
             }
         }
 
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+        /* ──────────────── THREAD IMAGE UPLOAD ──────────────── */
+        function openThreadImageUpload() {
+            document.getElementById('threadImageInput').click();
+        }
+
+        function handleThreadImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB)', 'error');
+                event.target.value = '';
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                threadImageBase64 = e.target.result.split(',')[1];
+                threadImageFile = file;
+                const preview = document.getElementById('threadImagePreview');
+                const img = document.getElementById('threadPreviewImg');
+                img.src = e.target.result;
+                preview.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function clearThreadImage() {
+            threadImageBase64 = null;
+            threadImageFile = null;
+            document.getElementById('threadImagePreview').style.display = 'none';
+            document.getElementById('threadPreviewImg').src = '';
         }
 
         /* ──────────────── AI MODE ──────────────── */
@@ -1317,7 +1440,6 @@
                     const data = await callGas('askAI', { question: text, provider, model });
                     removeTyping();
                     if (data.success) {
-                        // Check if response contains image
                         if (data.imageUrl) {
                             addMessage(data.answer || '📷 รูปภาพจาก AI', 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`, data.imageUrl);
                         } else {
@@ -1570,6 +1692,7 @@
         async function openThread(userId, displayName, pictureUrl) {
             currentThreadUserId = userId;
             clearQuoteReply();
+            clearThreadImage();
             document.getElementById('threadName').textContent = displayName;
             document.getElementById('threadAvatar').src = pictureUrl || '';
             document.getElementById('threadModal').classList.add('show');
@@ -1583,6 +1706,7 @@
             document.getElementById('threadModal').classList.remove('show');
             currentThreadUserId = null;
             clearQuoteReply();
+            clearThreadImage();
             if (window._threadPoll) { clearInterval(window._threadPoll);
                 window._threadPoll = null; }
         }
@@ -1679,23 +1803,57 @@
             }
         }
 
-        /* ─── Send Thread Reply ─── */
+        /* ─── Send Thread Reply (with image) ─── */
         async function sendThreadReply() {
             const input = document.getElementById('threadReplyInput');
             const text = input.value.trim();
-            if (!text || !currentThreadUserId) return;
+            if (!text && !threadImageBase64) {
+                showToast('⚠️ กรุณาพิมพ์ข้อความหรือแนบรูปภาพ', 'error');
+                return;
+            }
+            if (!currentThreadUserId) return;
+
             input.value = '';
             const quoteToken = currentQuoteToken;
+            const imageBase64 = threadImageBase64;
+            const imageFile = threadImageFile;
+
             clearQuoteReply();
+            clearThreadImage();
+
+            // Show sending status
+            addSystemMessage('📤 กำลังส่ง...');
+
             try {
-                const data = await callGas('replyToUser', { userId: currentThreadUserId, message: text, quoteToken });
+                let lh3Url = null;
+
+                // ถ้ามีรูป ให้อัปโหลดไป Google Drive ก่อน
+                if (imageBase64 && imageFile) {
+                    const uploadData = await uploadImageToDrive(imageFile);
+                    if (uploadData.success && uploadData.lh3Url) {
+                        lh3Url = uploadData.lh3Url;
+                    } else {
+                        showToast(`⚠️ อัปโหลดรูปไม่สำเร็จ: ${uploadData.error || ''}`, 'error');
+                        // ส่งเฉพาะข้อความต่อไป
+                    }
+                }
+
+                // ส่งข้อความ + รูป (ถ้ามี)
+                const data = await callGas('replyToUser', {
+                    userId: currentThreadUserId,
+                    message: text || '📷 รูปภาพ',
+                    quoteToken: quoteToken,
+                    imageUrl: lh3Url
+                });
+
                 if (data.success) {
                     await refreshThread();
+                    showToast('✅ ส่งสำเร็จ', 'success');
                 } else {
                     showToast(`❌ ${data.error || 'ส่งไม่สำเร็จ'}`, 'error');
                 }
-            } catch (_) {
-                showToast('❌ Connection error', 'error');
+            } catch (e) {
+                showToast(`❌ Connection error: ${e.message}`, 'error');
             }
         }
 
@@ -1721,21 +1879,17 @@
 
         /* ──────────────── INIT ──────────────── */
         async function initializeApp() {
-            // Show the app after login
             document.getElementById('appContainer').style.display = 'flex';
             await loadAiProviders();
             await checkStatus();
             setInterval(checkStatus, 30000);
-            console.log('💬 LINE BOT MCP · LINE-style chat ready with image support');
+            console.log('💬 LINE BOT MCP · Ready with Drive image upload');
         }
 
-        // Hide app initially, show login
         document.getElementById('appContainer').style.display = 'none';
-
-        // Start the login flow
         showLogin();
 
-        // Expose functions to global scope
+        // Expose functions
         window.sendMessage = sendMessage;
         window.toggleAiMode = toggleAiMode;
         window.getProfile = getProfile;
@@ -1752,6 +1906,9 @@
         window.clearQuoteReply = clearQuoteReply;
         window.openThread = openThread;
         window.togglePasswordVisibility = togglePasswordVisibility;
+        window.openThreadImageUpload = openThreadImageUpload;
+        window.handleThreadImageUpload = handleThreadImageUpload;
+        window.clearThreadImage = clearThreadImage;
     </script>
 </body>
 </html>
