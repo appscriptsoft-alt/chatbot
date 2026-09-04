@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* ──────────────── Reset & Variables ──────────────── */
         * {
@@ -255,6 +256,21 @@
             justify-content: flex-end;
         }
 
+        /* ─── Image in message ─── */
+        .msg-bubble img.msg-image {
+            max-width: 200px;
+            max-height: 300px;
+            border-radius: 10px;
+            margin-top: 4px;
+            display: block;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .msg-bubble img.msg-image:hover {
+            opacity: 0.9;
+        }
+
         /* ─── System / Info Message ─── */
         .msg.system {
             align-self: center;
@@ -372,6 +388,23 @@
         .input-row button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        /* ─── Image Upload Button ─── */
+        .input-row .image-upload-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 8px 10px;
+            border-radius: 50%;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .input-row .image-upload-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
         }
 
         /* ─── Tools Bar (LINE style) ─── */
@@ -721,12 +754,51 @@
             .input-row input { font-size: 13px; padding: 8px 14px; }
             .input-row button { font-size: 13px; padding: 8px 14px; }
         }
+
+        /* ──────────────── SweetAlert Override ──────────────── */
+        .swal2-popup {
+            border-radius: 20px !important;
+            font-family: var(--font) !important;
+        }
+
+        .swal2-title {
+            font-size: 1.5rem !important;
+        }
+
+        .swal2-input {
+            border-radius: 12px !important;
+            border: 2px solid #e0e0e0 !important;
+            font-size: 16px !important;
+            padding: 12px 16px !important;
+        }
+
+        .swal2-input:focus {
+            border-color: var(--bg-header) !important;
+            box-shadow: 0 0 0 3px rgba(0, 185, 0, 0.15) !important;
+        }
+
+        .swal2-confirm {
+            background: var(--bg-header) !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            padding: 10px 32px !important;
+        }
+
+        .swal2-confirm:hover {
+            background: #00cc00 !important;
+            transform: scale(1.02);
+        }
+
+        .swal2-cancel {
+            border-radius: 12px !important;
+            font-weight: 500 !important;
+        }
     </style>
 </head>
 <body>
 
     <!-- ──── LINE APP ──── -->
-    <div class="line-app">
+    <div class="line-app" id="appContainer">
 
         <!-- Header -->
         <header class="line-header">
@@ -768,10 +840,16 @@
             <div class="input-row">
                 <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..."
                        onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button class="image-upload-btn" onclick="openImageUpload()" title="ส่งรูปภาพ">
+                    <i class="fas fa-image"></i>
+                </button>
                 <button id="sendBtn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i> ส่ง
                 </button>
             </div>
+
+            <!-- Hidden file input -->
+            <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
 
             <!-- Tools -->
             <div class="tools-bar">
@@ -825,6 +903,92 @@
         const toast = document.getElementById('toast');
 
         let aiMode = false;
+        let isAuthenticated = false;
+        let currentUser = null;
+
+        /* ──────────────── SWEETALERT LOGIN ──────────────── */
+        async function showLogin() {
+            const { value: formValues } = await Swal.fire({
+                title: '🔐 เข้าสู่ระบบ LINE BOT',
+                html: `
+                    <div style="text-align:left;margin-bottom:8px;">
+                        <label style="font-weight:600;font-size:14px;color:#333;">👤 ชื่อผู้ใช้</label>
+                        <input id="swal-username" class="swal2-input" placeholder="กรอกชื่อผู้ใช้" autofocus>
+                        <label style="font-weight:600;font-size:14px;color:#333;">🔑 รหัสผ่าน</label>
+                        <input id="swal-password" class="swal2-input" type="password" placeholder="กรอกรหัสผ่าน">
+                    </div>
+                `,
+                confirmButtonText: 'เข้าสู่ระบบ 🚀',
+                cancelButtonText: 'ยกเลิก',
+                showCancelButton: true,
+                focusConfirm: false,
+                preConfirm: () => {
+                    const username = document.getElementById('swal-username').value.trim();
+                    const password = document.getElementById('swal-password').value.trim();
+                    if (!username || !password) {
+                        Swal.showValidationMessage('⚠️ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                        return false;
+                    }
+                    return { username, password };
+                }
+            });
+
+            if (formValues) {
+                await handleLogin(formValues.username, formValues.password);
+            } else {
+                // หากกดยกเลิก ให้แสดงข้อความและรอ login อีกครั้ง
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'กรุณาเข้าสู่ระบบ',
+                    text: 'คุณต้องเข้าสู่ระบบเพื่อใช้งาน LINE BOT MCP',
+                    confirmButtonText: 'ตกลง'
+                });
+                showLogin(); // เรียกใหม่
+            }
+        }
+
+        async function handleLogin(username, password) {
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        payload: { username, password }
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    isAuthenticated = true;
+                    currentUser = data.user || username;
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '🎉 เข้าสู่ระบบสำเร็จ!',
+                        text: `ยินดีต้อนรับ ${currentUser}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    initializeApp();
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: '❌ เข้าสู่ระบบล้มเหลว',
+                        text: data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+                        confirmButtonText: 'ลองใหม่'
+                    });
+                    showLogin(); // เรียกใหม่
+                }
+            } catch (error) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: '❌ เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                    confirmButtonText: 'ลองใหม่'
+                });
+                showLogin();
+            }
+        }
 
         /* ──────────────── HELPERS ──────────────── */
         function getTimestamp() {
@@ -857,12 +1021,19 @@
         }
 
         /* ──────────────── CHAT UI ──────────────── */
-        function addMessage(text, type = 'received', meta = '') {
+        function addMessage(text, type = 'received', meta = '', imageUrl = null) {
             const div = document.createElement('div');
             div.className = `msg ${type}`;
+
+            let imageHtml = '';
+            if (imageUrl) {
+                imageHtml = `<img src="${escapeAttr(imageUrl)}" class="msg-image" onclick="window.open('${escapeAttr(imageUrl)}', '_blank')" />`;
+            }
+
             div.innerHTML = `
                 <div class="msg-bubble">
                     ${text}
+                    ${imageHtml}
                     ${meta ? `<div class="meta">${meta}</div>` : ''}
                     <div class="timestamp">${getTimestamp()}</div>
                 </div>
@@ -900,7 +1071,6 @@
         }
 
         function clearChat() {
-            // ล้างทั้งหมดแล้วเพิ่มข้อความเริ่มต้นแบบเดียวกับตอนโหลดหน้า
             chatMessages.innerHTML = `
                 <div class="msg received">
                     <div class="msg-bubble">
@@ -910,6 +1080,82 @@
                 </div>
             `;
             showToast('🗑️ ล้างแชทแล้ว', 'success');
+        }
+
+        /* ──────────────── IMAGE UPLOAD ──────────────── */
+        function openImageUpload() {
+            document.getElementById('imageInput').click();
+        }
+
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB)', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            // Show preview in chat
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewUrl = e.target.result;
+                addMessage('📷 ส่งรูปภาพ', 'sent', '', previewUrl);
+
+                // Upload to server
+                uploadImageToServer(file);
+            };
+            reader.readAsDataURL(file);
+
+            event.target.value = '';
+        }
+
+        async function uploadImageToServer(file) {
+            addTyping();
+            try {
+                const base64 = await fileToBase64(file);
+                const data = await callGas('sendImage', {
+                    image: base64,
+                    filename: file.name,
+                    mimeType: file.type
+                });
+                removeTyping();
+
+                if (data.success) {
+                    addSystemMessage('✅ ส่งรูปภาพสำเร็จ!');
+                    showToast('✅ ส่งรูปภาพสำเร็จ', 'success');
+
+                    // If LINE sent back a URL, show it
+                    if (data.imageUrl) {
+                        addMessage('📎 รูปภาพที่ส่ง', 'received', lineStatusLabel(data), data.imageUrl);
+                    }
+                } else {
+                    addMessage(`❌ ${data.error || 'ส่งรูปภาพไม่สำเร็จ'}`, 'received');
+                    showToast('❌ ส่งรูปภาพไม่สำเร็จ', 'error');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Connection error: ${e.message}`, 'received');
+                showToast('❌ Connection error', 'error');
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
         /* ──────────────── AI MODE ──────────────── */
@@ -992,7 +1238,12 @@
                     const data = await callGas('askAI', { question: text, provider, model });
                     removeTyping();
                     if (data.success) {
-                        addMessage(data.answer, 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`);
+                        // Check if response contains image
+                        if (data.imageUrl) {
+                            addMessage(data.answer || '📷 รูปภาพจาก AI', 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`, data.imageUrl);
+                        } else {
+                            addMessage(data.answer, 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`);
+                        }
                         showToast(data.lineSent ? '✅ ตอบแล้วและส่งเข้า LINE' : '⚠️ ตอบแล้ว แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ?
                             'success' : 'error');
                     } else {
@@ -1037,13 +1288,17 @@
                 removeTyping();
                 if (data.success && data.profile) {
                     const p = data.profile;
-                    addMessage(`
+                    let text = `
                         👤 <strong>${escapeHtml(p.displayName || 'N/A')}</strong><br>
                         📱 ID: ${escapeHtml(p.userId || 'N/A')}<br>
                         🌐 Language: ${escapeHtml(p.language || 'N/A')}<br>
-                        💬 Status: ${escapeHtml(p.statusMessage || 'No status')}<br>
-                        ${p.pictureUrl ? `<img src="${escapeAttr(p.pictureUrl)}" style="width:40px;margin-top:6px;border-radius:50%;border:2px solid #e0e0e0;">` : ''}
-                    `, 'received', `👤 PROFILE · ${lineStatusLabel(data)}`);
+                        💬 Status: ${escapeHtml(p.statusMessage || 'No status')}
+                    `;
+                    let imageUrl = null;
+                    if (p.pictureUrl) {
+                        imageUrl = p.pictureUrl;
+                    }
+                    addMessage(text, 'received', `👤 PROFILE · ${lineStatusLabel(data)}`, imageUrl);
                     showToast(data.lineSent ? '✅ ดึงโปรไฟล์และส่งเข้า LINE แล้ว' : '⚠️ ดึงโปรไฟล์สำเร็จ แต่ส่ง LINE ไม่สำเร็จ',
                         data.lineSent ? 'success' : 'error');
                 } else {
@@ -1263,6 +1518,7 @@
                     <div class="msg ${m.direction === 'out' ? 'sent' : 'received'}">
                         <div class="msg-bubble">
                             ${escapeHtml(m.text)}
+                            ${m.imageUrl ? `<img src="${escapeAttr(m.imageUrl)}" class="msg-image" style="max-width:150px;max-height:200px;border-radius:8px;margin-top:4px;cursor:pointer;" onclick="window.open('${escapeAttr(m.imageUrl)}','_blank')" />` : ''}
                             <div class="timestamp">${new Date(m.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
                             ${m.direction === 'in' && m.quoteToken ? `<button class="quote-reply-btn" data-quote-token="${escapeAttr(m.quoteToken)}" data-quote-text="${escapeAttr((m.text || '').slice(0, 60))}" onclick="handleQuoteClick(this)">↩ ตอบกลับข้อความนี้</button>` : ''}
                         </div>
@@ -1385,10 +1641,37 @@
         }
 
         /* ──────────────── INIT ──────────────── */
-        loadAiProviders();
-        checkStatus();
-        setInterval(checkStatus, 30000);
-        console.log('💬 LINE BOT MCP · LINE-style chat ready');
+        async function initializeApp() {
+            // Show the app after login
+            document.getElementById('appContainer').style.display = 'flex';
+            await loadAiProviders();
+            await checkStatus();
+            setInterval(checkStatus, 30000);
+            console.log('💬 LINE BOT MCP · LINE-style chat ready with image support');
+        }
+
+        // Hide app initially, show login
+        document.getElementById('appContainer').style.display = 'none';
+
+        // Start the login flow
+        showLogin();
+
+        // Expose functions to global scope
+        window.sendMessage = sendMessage;
+        window.toggleAiMode = toggleAiMode;
+        window.getProfile = getProfile;
+        window.getFollowers = getFollowers;
+        window.getQuota = getQuota;
+        window.openInbox = openInbox;
+        window.clearChat = clearChat;
+        window.openImageUpload = openImageUpload;
+        window.handleImageUpload = handleImageUpload;
+        window.closeThread = closeThread;
+        window.sendThreadReply = sendThreadReply;
+        window.suggestAiReply = suggestAiReply;
+        window.handleQuoteClick = handleQuoteClick;
+        window.clearQuoteReply = clearQuoteReply;
+        window.openThread = openThread;
     </script>
 </body>
 </html>
