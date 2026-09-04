@@ -810,6 +810,35 @@
             color: var(--bg-header);
             font-weight: 700;
         }
+
+        /* Password input wrapper */
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper .swal2-input {
+            width: 100%;
+            padding-right: 44px;
+        }
+
+        .password-wrapper .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            transition: var(--transition);
+        }
+
+        .password-wrapper .toggle-password:hover {
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -911,7 +940,6 @@
 
         /* ──────────────── LOGIN CONFIG ──────────────── */
         const VALID_PASSWORD = '654321';
-        const VALID_USERNAME = 'admin';
 
         /* ──────────────── DOM REFS ──────────────── */
         const chatMessages = document.getElementById('chatMessages');
@@ -929,14 +957,17 @@
 
         /* ──────────────── SWEETALERT LOGIN ──────────────── */
         async function showLogin() {
-            const { value: formValues } = await Swal.fire({
-                title: '🔐 เข้าสู่ระบบ LINE BOT',
+            const { value: password } = await Swal.fire({
+                title: '🔐 กรอกรหัสผ่าน',
                 html: `
-                    <div style="text-align:left;margin-bottom:8px;">
-                        <label style="font-weight:600;font-size:14px;color:#333;">👤 ชื่อผู้ใช้</label>
-                        <input id="swal-username" class="swal2-input" placeholder="กรอกชื่อผู้ใช้" value="admin" autofocus>
-                        <label style="font-weight:600;font-size:14px;color:#333;">🔑 รหัสผ่าน</label>
-                        <input id="swal-password" class="swal2-input" type="password" placeholder="กรอกรหัสผ่าน">
+                    <div style="text-align:left;">
+                        <label style="font-weight:600;font-size:14px;color:#333;display:block;margin-bottom:4px;">🔑 รหัสผ่าน</label>
+                        <div class="password-wrapper">
+                            <input id="swal-password" class="swal2-input" type="password" placeholder="กรอกรหัสผ่าน" autofocus>
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+                                <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                            </button>
+                        </div>
                         <div class="login-hint">
                             💡 <strong>รหัสผ่าน: 654321</strong>
                         </div>
@@ -947,39 +978,51 @@
                 showCancelButton: true,
                 focusConfirm: false,
                 preConfirm: () => {
-                    const username = document.getElementById('swal-username').value.trim();
-                    const password = document.getElementById('swal-password').value.trim();
-                    if (!username || !password) {
-                        Swal.showValidationMessage('⚠️ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                    const pwd = document.getElementById('swal-password').value.trim();
+                    if (!pwd) {
+                        Swal.showValidationMessage('⚠️ กรุณากรอกรหัสผ่าน');
                         return false;
                     }
-                    return { username, password };
+                    return pwd;
                 }
             });
 
-            if (formValues) {
-                await handleLogin(formValues.username, formValues.password);
+            if (password) {
+                await handleLogin(password);
             } else {
                 // หากกดยกเลิก ให้แสดงข้อความและรอ login อีกครั้ง
                 await Swal.fire({
                     icon: 'info',
                     title: 'กรุณาเข้าสู่ระบบ',
-                    text: 'คุณต้องเข้าสู่ระบบเพื่อใช้งาน LINE BOT MCP',
+                    text: 'คุณต้องกรอกรหัสผ่านเพื่อใช้งาน LINE BOT MCP',
                     confirmButtonText: 'ตกลง'
                 });
                 showLogin(); // เรียกใหม่
             }
         }
 
-        async function handleLogin(username, password) {
-            // ตรวจสอบรหัสผ่าน本地ก่อน (สามารถเชื่อมต่อ GAS ก็ได้)
-            if (password === VALID_PASSWORD && username === VALID_USERNAME) {
+        // ฟังก์ชัน toggle การแสดงรหัสผ่าน
+        window.togglePasswordVisibility = function() {
+            const input = document.getElementById('swal-password');
+            const icon = document.getElementById('passwordToggleIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        };
+
+        async function handleLogin(password) {
+            // ตรวจสอบรหัสผ่าน
+            if (password === VALID_PASSWORD) {
                 isAuthenticated = true;
-                currentUser = username;
+                currentUser = 'admin';
                 await Swal.fire({
                     icon: 'success',
                     title: '🎉 เข้าสู่ระบบสำเร็จ!',
-                    text: `ยินดีต้อนรับ ${currentUser}`,
+                    text: 'ยินดีต้อนรับ',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -994,14 +1037,14 @@
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'login',
-                        payload: { username, password }
+                        payload: { password }
                     })
                 });
                 const data = await response.json();
 
                 if (data.success) {
                     isAuthenticated = true;
-                    currentUser = data.user || username;
+                    currentUser = data.user || 'user';
                     await Swal.fire({
                         icon: 'success',
                         title: '🎉 เข้าสู่ระบบสำเร็จ!',
@@ -1019,8 +1062,8 @@
             // ถ้าทุกอย่างล้มเหลว
             await Swal.fire({
                 icon: 'error',
-                title: '❌ เข้าสู่ระบบล้มเหลว',
-                text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (รหัสผ่าน: 654321)',
+                title: '❌ รหัสผ่านไม่ถูกต้อง',
+                text: 'กรุณากรอกรหัสผ่านให้ถูกต้อง (รหัสผ่าน: 654321)',
                 confirmButtonText: 'ลองใหม่'
             });
             showLogin();
@@ -1708,6 +1751,7 @@
         window.handleQuoteClick = handleQuoteClick;
         window.clearQuoteReply = clearQuoteReply;
         window.openThread = openThread;
+        window.togglePasswordVisibility = togglePasswordVisibility;
     </script>
 </body>
 </html>
