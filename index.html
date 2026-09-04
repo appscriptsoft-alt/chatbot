@@ -2,17 +2,14 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LINE BOT MCP · Analytics Dashboard</title>
-    <!-- Font & Icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>LINE BOT MCP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ─────────────────────────────────────────────
-           Root & Reset
-           ───────────────────────────────────────────── */
+        /* ──────────────── Reset & Variables ──────────────── */
         * {
             margin: 0;
             padding: 0;
@@ -20,354 +17,168 @@
         }
 
         :root {
-            --bg-primary: #0b0f18;
-            --bg-secondary: #111827;
-            --bg-card: #1a2332;
-            --bg-card-hover: #1f2a3f;
-            --bg-input: #0b0f18;
-            --border-color: #2a3548;
-            --border-light: #3d4a60;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-blue: #3b82f6;
-            --accent-blue-hover: #60a5fa;
-            --accent-green: #22d3ee;
-            --accent-purple: #8b5cf6;
-            --accent-amber: #f59e0b;
-            --accent-pink: #ec4899;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-            --radius: 16px;
-            --radius-sm: 10px;
-            --radius-xs: 6px;
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --bg-app: #f5f5f5;
+            --bg-header: #00b900;
+            --bg-chat: #f5f5f5;
+            --bg-bubble-sent: #00b900;
+            --bg-bubble-received: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --text-sent: #ffffff;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --radius-bubble: 18px;
+            --radius-bubble-sent: 18px 4px 18px 18px;
+            --radius-bubble-received: 4px 18px 18px 18px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --transition: 0.2s ease;
+            --max-width: 480px;
         }
 
         body {
             font-family: var(--font);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
+            background: #e8e8e8;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 16px;
         }
 
-        /* ─────────────────────────────────────────────
-           Main Container
-           ───────────────────────────────────────────── */
-        .dashboard {
+        /* ──────────────── LINE App Container ──────────────── */
+        .line-app {
             width: 100%;
-            max-width: 1100px;
-            background: var(--bg-secondary);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow);
+            max-width: var(--max-width);
+            height: 92vh;
+            max-height: 780px;
+            background: var(--bg-app);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
             position: relative;
-            min-height: 90vh;
-            max-height: 95vh;
         }
 
-        /* ─────────────────────────────────────────────
-           Header / Nav
-           ───────────────────────────────────────────── */
-        .navbar {
+        /* ──────────────── Header (LINE style) ──────────────── */
+        .line-header {
+            background: var(--bg-header);
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 28px;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 12px;
             flex-shrink: 0;
-            background: var(--bg-secondary);
+            position: relative;
+            z-index: 10;
         }
 
-        .brand {
+        .line-header .brand {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .brand .logo {
-            font-size: 22px;
+        .line-header .brand .logo {
+            font-size: 20px;
+            color: #ffffff;
         }
 
-        .brand h1 {
-            font-size: 18px;
+        .line-header .brand h1 {
+            font-size: 16px;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #ffffff;
+            letter-spacing: 0.02em;
         }
 
-        .nav-actions {
+        .line-header .status {
             display: flex;
             align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
+            gap: 6px;
+            font-size: 11px;
             font-weight: 500;
-            color: var(--text-secondary);
-            background: var(--bg-card);
-            padding: 6px 16px 6px 12px;
-            border-radius: 40px;
-            border: 1px solid var(--border-color);
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 12px 4px 8px;
+            border-radius: 20px;
         }
 
-        .status-dot {
-            width: 10px;
-            height: 10px;
+        .line-header .status .dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: var(--accent-green);
+            background: #7fff7f;
             animation: pulse-dot 2s ease-in-out infinite;
             flex-shrink: 0;
         }
 
-        .status-dot.offline {
-            background: #ef4444;
+        .line-header .status .dot.offline {
+            background: #ff6b6b;
             animation: none;
         }
 
         @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.4;
-                transform: scale(0.85);
-            }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
         }
 
-        .btn {
-            font-family: var(--font);
-            font-weight: 600;
-            font-size: 13px;
-            padding: 8px 18px;
-            border-radius: var(--radius-xs);
-            border: none;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
+        .line-header .actions {
+            display: flex;
             gap: 6px;
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            text-decoration: none;
         }
 
-        .btn:hover {
-            background: var(--bg-card-hover);
-            color: var(--text-primary);
-            border-color: var(--border-light);
-        }
-
-        .btn-primary {
-            background: var(--accent-blue);
-            color: #0b0f18;
+        .line-header .actions button {
+            background: rgba(255, 255, 255, 0.12);
             border: none;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .btn-primary:hover {
-            background: var(--accent-blue-hover);
-            color: #0b0f18;
+        .line-header .actions button:hover {
+            background: rgba(255, 255, 255, 0.25);
         }
 
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .line-header .actions button:active {
+            transform: scale(0.92);
         }
 
-        .btn-sm {
-            font-size: 12px;
-            padding: 5px 12px;
-        }
-
-        /* ─────────────────────────────────────────────
-           Dashboard Grid
-           ───────────────────────────────────────────── */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 280px;
-            gap: 0;
+        /* ──────────────── Chat Area ──────────────── */
+        .chat-area {
             flex: 1;
-            overflow: hidden;
-            min-height: 0;
-        }
-
-        /* ─── Main Panel ─── */
-        .main-panel {
-            padding: 24px 28px;
             overflow-y: auto;
+            padding: 16px 14px 12px;
+            background: var(--bg-chat);
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            background: var(--bg-primary);
-            border-right: 1px solid var(--border-color);
+            gap: 4px;
             min-height: 0;
         }
 
-        .main-panel::-webkit-scrollbar {
-            width: 5px;
+        .chat-area::-webkit-scrollbar {
+            width: 4px;
         }
-        .main-panel::-webkit-scrollbar-track {
+        .chat-area::-webkit-scrollbar-track {
             background: transparent;
         }
-        .main-panel::-webkit-scrollbar-thumb {
-            background: var(--border-color);
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
             border-radius: 10px;
         }
 
-        /* ─── Sidebar (Controls + Inbox) ─── */
-        .sidebar {
-            padding: 24px 20px;
-            background: var(--bg-secondary);
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            min-height: 0;
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 10px;
-        }
-
-        /* ─────────────────────────────────────────────
-           Stats Cards
-           ───────────────────────────────────────────── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 16px 18px;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--border-light);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .stat-value {
-            font-size: 26px;
-            font-weight: 700;
-            margin-top: 6px;
-            color: var(--text-primary);
-        }
-
-        .stat-change {
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stat-change.positive {
-            color: var(--accent-green);
-        }
-        .stat-change.negative {
-            color: #ef4444;
-        }
-
-        /* ─────────────────────────────────────────────
-           Chat Area (Main)
-           ───────────────────────────────────────────── */
-        .chat-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-height: 280px;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .chat-header h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .chat-header .badge {
-            font-size: 11px;
-            font-weight: 500;
-            background: var(--bg-primary);
-            color: var(--text-muted);
-            padding: 2px 10px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 16px 18px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: var(--bg-primary);
-            min-height: 0;
-        }
-
-        .chat-messages::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 10px;
-        }
-
+        /* ─── Messages ─── */
         .msg {
             display: flex;
             flex-direction: column;
             max-width: 88%;
             animation: fade-up 0.25s ease-out;
+            margin-bottom: 2px;
         }
 
         .msg.sent {
@@ -384,43 +195,51 @@
         }
 
         @keyframes fade-up {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .msg-bubble {
             padding: 10px 14px;
-            border-radius: var(--radius-sm);
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.55;
             word-break: break-word;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-bottom-left-radius: 4px;
+            position: relative;
+            box-shadow: var(--shadow);
         }
 
         .msg.sent .msg-bubble {
-            background: var(--accent-blue);
-            color: #0b0f18;
-            border-color: var(--accent-blue);
+            background: var(--bg-bubble-sent);
+            color: var(--text-sent);
+            border-radius: var(--radius-bubble-sent);
             border-bottom-right-radius: 4px;
-            border-bottom-left-radius: var(--radius-sm);
+        }
+
+        .msg.received .msg-bubble {
+            background: var(--bg-bubble-received);
+            color: var(--text-primary);
+            border-radius: var(--radius-bubble-received);
+            border-bottom-left-radius: 4px;
         }
 
         .msg.ai .msg-bubble {
-            border-color: var(--accent-purple);
+            background: #f0e6ff;
+            color: var(--text-primary);
+            border-radius: var(--radius-bubble-received);
+            border-bottom-left-radius: 4px;
+            border: 1px solid #d4b8ff;
         }
 
         .msg .timestamp {
             font-size: 10px;
             color: var(--text-muted);
-            margin-top: 4px;
+            margin-top: 3px;
+            letter-spacing: 0.02em;
+        }
+
+        .msg.sent .timestamp {
+            text-align: right;
+            padding-right: 2px;
         }
 
         .msg .meta {
@@ -432,14 +251,36 @@
             gap: 6px;
         }
 
+        .msg.sent .meta {
+            justify-content: flex-end;
+        }
+
+        /* ─── System / Info Message ─── */
+        .msg.system {
+            align-self: center;
+            max-width: 92%;
+        }
+
+        .msg.system .msg-bubble {
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-radius: 12px;
+            padding: 6px 14px;
+            box-shadow: none;
+            text-align: center;
+        }
+
+        /* ─── Typing ─── */
         .typing-indicator {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            background: #ffffff;
+            border-radius: var(--radius-bubble-received);
+            border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow);
             align-self: flex-start;
         }
 
@@ -451,46 +292,42 @@
         .typing-dots span {
             width: 8px;
             height: 8px;
-            background: var(--text-muted);
+            background: #999;
             border-radius: 50%;
             animation: typing-bounce 1.4s ease-in-out infinite;
         }
 
-        .typing-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .typing-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing-bounce {
-            0%,
-            60%,
-            100% {
-                transform: translateY(0);
-                opacity: 0.4;
-            }
-            30% {
-                transform: translateY(-8px);
-                opacity: 1;
-            }
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+            30% { transform: translateY(-6px); opacity: 1; }
         }
 
-        .chat-input-row {
-            display: flex;
-            gap: 10px;
-            padding: 12px 18px;
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-card);
+        /* ──────────────── Input Area (LINE style) ──────────────── */
+        .input-area {
+            padding: 8px 14px 14px;
+            background: #f0f0f0;
+            border-top: 1px solid #e0e0e0;
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .chat-input-row input {
+        .input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .input-row input {
             flex: 1;
-            padding: 10px 14px;
-            border-radius: var(--radius-xs);
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
+            padding: 10px 16px;
+            border-radius: 24px;
+            border: 1px solid #e0e0e0;
+            background: #ffffff;
             color: var(--text-primary);
             font-family: var(--font);
             font-size: 14px;
@@ -498,198 +335,153 @@
             transition: var(--transition);
         }
 
-        .chat-input-row input:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        .input-row input:focus {
+            border-color: var(--bg-header);
+            box-shadow: 0 0 0 3px rgba(0, 185, 0, 0.12);
         }
 
-        .chat-input-row input::placeholder {
-            color: var(--text-muted);
+        .input-row input::placeholder {
+            color: #aaa;
         }
 
-        /* ─────────────────────────────────────────────
-           Sidebar Components
-           ───────────────────────────────────────────── */
-        .sidebar-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .sidebar-section h4 {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-muted);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .control-group .btn {
-            width: 100%;
-            justify-content: center;
-            font-size: 12px;
-            padding: 8px 12px;
-        }
-
-        .control-group .btn .badge {
-            background: var(--accent-pink);
-            color: #0b0f18;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 0 8px;
-            border-radius: 20px;
-            line-height: 18px;
-            margin-left: 4px;
-        }
-
-        .toggle-group {
-            display: flex;
-            gap: 6px;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xs);
-            padding: 4px;
-            border: 1px solid var(--border-color);
-        }
-
-        .toggle-group .btn {
-            flex: 1;
+        .input-row button {
+            padding: 10px 18px;
+            border-radius: 24px;
             border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 12px;
-            padding: 6px 8px;
-            justify-content: center;
-            border-radius: 4px;
-        }
-
-        .toggle-group .btn.active {
-            background: var(--accent-blue);
-            color: #0b0f18;
-        }
-
-        .toggle-group .btn:hover:not(.active) {
-            background: var(--bg-card-hover);
-            color: var(--text-primary);
-        }
-
-        select.pixel-select {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: var(--radius-xs);
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
-            color: var(--text-primary);
-            font-family: var(--font);
-            font-size: 12px;
-            outline: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
+            background: var(--bg-header);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
-        }
-
-        select.pixel-select optgroup {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .inbox-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .inbox-list::-webkit-scrollbar {
-            width: 3px;
-        }
-        .inbox-list::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 10px;
-        }
-
-        .inbox-item {
+            transition: var(--transition);
+            white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: var(--radius-xs);
-            border: 1px solid transparent;
-            background: var(--bg-primary);
+            gap: 6px;
+        }
+
+        .input-row button:hover:not(:disabled) {
+            background: #00cc00;
+            transform: scale(1.02);
+        }
+
+        .input-row button:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .input-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ─── Tools Bar (LINE style) ─── */
+        .tools-bar {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            padding: 0 2px;
+        }
+
+        .tools-bar button {
+            font-family: var(--font);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tools-bar button:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+        }
+
+        .tools-bar button:active {
+            transform: scale(0.95);
+        }
+
+        .tools-bar .badge {
+            background: #ff3b30;
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 0 6px;
+            border-radius: 10px;
+            line-height: 16px;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        /* ──────────────── AI Controls (collapsible) ──────────────── */
+        .ai-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 0 2px;
+            flex-wrap: wrap;
+        }
+
+        .ai-controls .toggle-btn {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 14px;
+            border-radius: 16px;
+            border: 1px solid #d0d0d0;
+            background: #ffffff;
+            color: var(--text-secondary);
             cursor: pointer;
             transition: var(--transition);
         }
 
-        .inbox-item:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--border-color);
+        .ai-controls .toggle-btn.active {
+            background: var(--bg-header);
+            color: #ffffff;
+            border-color: var(--bg-header);
         }
 
-        .inbox-item.unread {
-            border-color: var(--accent-pink);
+        .ai-controls .toggle-btn:hover:not(.active) {
+            background: #f0f0f0;
         }
 
-        .inbox-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
-            background: var(--bg-card);
-            flex-shrink: 0;
-            object-fit: cover;
+        .ai-controls select {
+            font-size: 11px;
+            padding: 3px 26px 3px 12px;
+            border-radius: 16px;
+            border: 1px solid #d0d0d0;
+            background: #ffffff;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-weight: 500;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            cursor: pointer;
+            max-width: 140px;
         }
 
-        .inbox-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .inbox-name {
-            font-size: 13px;
-            font-weight: 600;
+        .ai-controls select optgroup {
+            background: #ffffff;
             color: var(--text-primary);
         }
 
-        .inbox-item.unread .inbox-name::after {
-            content: ' ●';
-            color: var(--accent-pink);
-            font-size: 10px;
-        }
-
-        .inbox-preview {
-            font-size: 12px;
-            color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .inbox-empty {
-            font-size: 13px;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        /* ─────────────────────────────────────────────
-           Modal (Thread)
-           ───────────────────────────────────────────── */
+        /* ──────────────── Modal (Thread) ──────────────── */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             display: none;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
             z-index: 2000;
             padding: 20px;
@@ -700,32 +492,37 @@
         }
 
         .modal {
-            background: var(--bg-secondary);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow);
-            max-width: 500px;
+            background: var(--bg-app);
+            border-radius: 24px 24px 0 0;
+            max-width: var(--max-width);
             width: 100%;
-            max-height: 85vh;
+            max-height: 88vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            animation: slide-up 0.3s ease-out;
+        }
+
+        @keyframes slide-up {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 14px 18px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #ffffff;
             flex-shrink: 0;
         }
 
         .modal-header img {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 2px solid var(--border-color);
+            border: 2px solid #e0e0e0;
             object-fit: cover;
         }
 
@@ -733,12 +530,13 @@
             flex: 1;
             font-size: 16px;
             font-weight: 600;
+            color: var(--text-primary);
         }
 
         .modal-header .close-btn {
             background: transparent;
             border: none;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             font-size: 22px;
             cursor: pointer;
             padding: 0 6px;
@@ -751,11 +549,12 @@
         .modal-body {
             flex: 1;
             overflow-y: auto;
-            padding: 16px 20px;
+            padding: 16px 14px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background: var(--bg-primary);
+            gap: 4px;
+            background: var(--bg-chat);
+            min-height: 200px;
         }
 
         .modal-body .msg {
@@ -766,19 +565,19 @@
             font-size: 10px;
             font-weight: 500;
             background: transparent;
-            color: var(--accent-green);
-            border: 1px solid var(--accent-green);
-            border-radius: var(--radius-xs);
-            padding: 2px 8px;
-            margin-top: 6px;
+            color: var(--bg-header);
+            border: 1px solid var(--bg-header);
+            border-radius: 12px;
+            padding: 2px 10px;
+            margin-top: 4px;
             cursor: pointer;
             transition: var(--transition);
             display: inline-block;
         }
 
         .quote-reply-btn:hover {
-            background: var(--accent-green);
-            color: #0b0f18;
+            background: var(--bg-header);
+            color: #ffffff;
         }
 
         .quote-preview-bar {
@@ -787,10 +586,10 @@
             justify-content: space-between;
             gap: 10px;
             padding: 6px 16px;
-            background: var(--bg-card);
-            border-top: 1px solid var(--border-color);
+            background: #f8f8f8;
+            border-top: 1px solid #e0e0e0;
             font-size: 13px;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             flex-shrink: 0;
         }
 
@@ -800,8 +599,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            border-left: 3px solid var(--accent-pink);
+            border-left: 3px solid var(--bg-header);
             padding-left: 10px;
+            color: var(--text-primary);
         }
 
         .quote-preview-bar button {
@@ -814,19 +614,19 @@
 
         .modal-footer {
             display: flex;
-            gap: 10px;
-            padding: 12px 16px;
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-secondary);
+            gap: 8px;
+            padding: 8px 14px 14px;
+            background: #f0f0f0;
+            border-top: 1px solid #e0e0e0;
             flex-shrink: 0;
         }
 
         .modal-footer input {
             flex: 1;
-            padding: 10px 14px;
-            border-radius: var(--radius-xs);
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
+            padding: 10px 16px;
+            border-radius: 24px;
+            border: 1px solid #e0e0e0;
+            background: #ffffff;
             color: var(--text-primary);
             font-family: var(--font);
             font-size: 14px;
@@ -834,30 +634,54 @@
         }
 
         .modal-footer input:focus {
-            border-color: var(--accent-blue);
+            border-color: var(--bg-header);
         }
 
         .modal-footer .btn {
-            font-size: 12px;
             padding: 10px 16px;
+            border-radius: 24px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
         }
 
-        /* ─────────────────────────────────────────────
-           Toast
-           ───────────────────────────────────────────── */
+        .modal-footer .btn-primary {
+            background: var(--bg-header);
+            color: #ffffff;
+        }
+
+        .modal-footer .btn-primary:hover {
+            background: #00cc00;
+        }
+
+        .modal-footer .btn-ai {
+            background: #8b5cf6;
+            color: #ffffff;
+        }
+
+        .modal-footer .btn-ai:hover {
+            background: #7c3aed;
+        }
+
+        /* ──────────────── Toast ──────────────── */
         .toast {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%) translateY(80px);
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 12px 24px;
+            background: #333333;
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 10px 24px;
             font-size: 13px;
             font-weight: 500;
-            color: var(--text-primary);
-            box-shadow: var(--shadow);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             opacity: 0;
             transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 3000;
@@ -871,198 +695,89 @@
             transform: translateX(-50%) translateY(0);
         }
         .toast.error {
-            border-color: #ef4444;
-            color: #f87171;
+            background: #e74c3c;
         }
         .toast.success {
-            border-color: var(--accent-green);
-            color: var(--accent-green);
+            background: var(--bg-header);
         }
 
-        /* ─────────────────────────────────────────────
-           Responsive
-           ───────────────────────────────────────────── */
-        @media (max-width: 820px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            .main-panel {
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-            }
-            .sidebar {
-                max-height: 320px;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 0;
-            }
-            .dashboard {
-                border-radius: 0;
-                border: none;
+        /* ──────────────── Responsive ──────────────── */
+        @media (max-width: 520px) {
+            body { padding: 0; }
+            .line-app {
                 max-height: 100vh;
-                min-height: 100vh;
-            }
-            .navbar {
-                padding: 12px 16px;
-            }
-            .brand h1 {
-                font-size: 15px;
-            }
-            .main-panel {
-                padding: 16px;
-            }
-            .sidebar {
-                padding: 16px;
-                max-height: 260px;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .stat-value {
-                font-size: 20px;
-            }
-            .chat-input-row {
-                padding: 8px 12px;
-                flex-wrap: wrap;
-            }
-            .chat-input-row input {
-                font-size: 13px;
+                height: 100vh;
+                border-radius: 0;
             }
             .modal {
-                max-width: 95%;
-                max-height: 90vh;
+                max-height: 92vh;
+                border-radius: 20px 20px 0 0;
             }
+        }
+
+        @media (max-width: 400px) {
+            .line-header .brand h1 { font-size: 14px; }
+            .line-header .status { font-size: 10px; padding: 2px 10px 2px 6px; }
+            .input-row input { font-size: 13px; padding: 8px 14px; }
+            .input-row button { font-size: 13px; padding: 8px 14px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ──── DASHBOARD ──── -->
-    <div class="dashboard">
+    <!-- ──── LINE APP ──── -->
+    <div class="line-app">
 
-        <!-- Navbar -->
-        <header class="navbar">
+        <!-- Header -->
+        <header class="line-header">
             <div class="brand">
-                <span class="logo">📊</span>
+                <span class="logo"><i class="fas fa-comment-dots"></i></span>
                 <h1>LINE BOT MCP</h1>
             </div>
-            <div class="nav-actions">
-                <div class="status-badge">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">ONLINE</span>
-                </div>
-                <button class="btn btn-primary btn-sm" onclick="getProfile()">
-                    <i class="fas fa-user"></i> Profile
-                </button>
-                <button class="btn btn-sm" onclick="getFollowers()">
-                    <i class="fas fa-users"></i>
-                </button>
-                <button class="btn btn-sm" onclick="getQuota()">
-                    <i class="fas fa-chart-simple"></i>
-                </button>
-                <button class="btn btn-sm" onclick="clearChat()">
-                    <i class="fas fa-eraser"></i>
-                </button>
+            <div class="status">
+                <span class="dot" id="statusDot"></span>
+                <span id="statusText">ONLINE</span>
+            </div>
+            <div class="actions">
+                <button onclick="clearChat()" title="ล้างแชท"><i class="fas fa-eraser"></i></button>
             </div>
         </header>
 
-        <!-- Grid -->
-        <div class="dashboard-grid">
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatMessages">
+            <div class="msg system">
+                <div class="msg-bubble">👋 สวัสดี! ระบบพร้อมใช้งานแล้ว</div>
+            </div>
+        </div>
 
-            <!-- ─── MAIN PANEL ─── -->
-            <div class="main-panel">
-
-                <!-- Stats -->
-                <div class="stats-grid" id="statsGrid">
-                    <div class="stat-card">
-                        <div class="stat-label">ข้อความที่ส่ง</div>
-                        <div class="stat-value" id="sentCount">0</div>
-                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +12%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">ข้อความที่รับ</div>
-                        <div class="stat-value" id="receivedCount">0</div>
-                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +8%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">ผู้ใช้</div>
-                        <div class="stat-value" id="userCount">0</div>
-                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +5%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Quota</div>
-                        <div class="stat-value" id="quotaDisplay">-</div>
-                        <div class="stat-change" id="quotaChange">กำลังโหลด...</div>
-                    </div>
-                </div>
-
-                <!-- Chat -->
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <h3><i class="fas fa-comment-dots" style="color: var(--accent-blue);"></i> แชทสด</h3>
-                        <span class="badge" id="chatBadge">พร้อมใช้งาน</span>
-                    </div>
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="msg received">
-                            <div class="msg-bubble">
-                                👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
-                                <span style="color: var(--text-muted); font-size: 12px;">พิมพ์ข้อความเพื่อส่ง หรือใช้เครื่องมือด้านขวา</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key === 'Enter') sendMessage()" />
-                        <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> ส่ง</button>
-                    </div>
-                </div>
+        <!-- Input Area -->
+        <div class="input-area">
+            <!-- AI Controls -->
+            <div class="ai-controls">
+                <button class="toggle-btn" id="aiModeBtn" onclick="toggleAiMode()">🤖 AI OFF</button>
+                <select class="pixel-select" id="modelSelect">
+                    <option value="">⏳ กำลังโหลด...</option>
+                </select>
             </div>
 
-            <!-- ─── SIDEBAR ─── -->
-            <div class="sidebar">
+            <!-- Input Row -->
+            <div class="input-row">
+                <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..."
+                       onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button id="sendBtn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i> ส่ง
+                </button>
+            </div>
 
-                <!-- AI Controls -->
-                <div class="sidebar-section">
-                    <h4><i class="fas fa-robot" style="color: var(--accent-purple);"></i> AI Assistant</h4>
-                    <div class="control-group">
-                        <div class="toggle-group">
-                            <button class="btn active" id="aiModeBtn" onclick="toggleAiMode()">🤖 OFF</button>
-                            <button class="btn" id="aiOnBtn" onclick="toggleAiMode()">ON</button>
-                        </div>
-                        <select class="pixel-select" id="modelSelect">
-                            <option value="">⏳ กำลังโหลด...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="sidebar-section">
-                    <h4><i class="fas fa-bolt" style="color: var(--accent-amber);"></i> เครื่องมือ</h4>
-                    <div class="control-group">
-                        <button class="btn" onclick="getProfile()"><i class="fas fa-user"></i> โปรไฟล์</button>
-                        <button class="btn" onclick="getFollowers()"><i class="fas fa-users"></i> ผู้ติดตาม</button>
-                        <button class="btn" onclick="getQuota()"><i class="fas fa-chart-simple"></i> Quota</button>
-                        <button class="btn" onclick="openInbox()" style="position: relative;">
-                            <i class="fas fa-inbox"></i> กล่องข้อความ
-                            <span class="badge" id="inboxBadge" style="display: none;">0</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Inbox Preview -->
-                <div class="sidebar-section" style="flex:1; min-height:0;">
-                    <h4><i class="fas fa-envelope" style="color: var(--accent-pink);"></i> ข้อความล่าสุด</h4>
-                    <div class="inbox-list" id="inboxPreview">
-                        <div class="inbox-empty">ไม่มีข้อความ</div>
-                    </div>
-                </div>
-
+            <!-- Tools -->
+            <div class="tools-bar">
+                <button onclick="getProfile()"><i class="fas fa-user"></i> โปรไฟล์</button>
+                <button onclick="getFollowers()"><i class="fas fa-users"></i> ผู้ติดตาม</button>
+                <button onclick="getQuota()"><i class="fas fa-chart-simple"></i> Quota</button>
+                <button onclick="openInbox()">
+                    <i class="fas fa-inbox"></i> ข้อความ
+                    <span class="badge" id="inboxBadge" style="display:none;">0</span>
+                </button>
             </div>
         </div>
     </div>
@@ -1082,9 +797,7 @@
             </div>
             <div class="modal-footer">
                 <input type="text" id="threadReplyInput" placeholder="พิมพ์ตอบกลับ..." onkeypress="if(event.key === 'Enter') sendThreadReply()" />
-                <button class="btn" id="aiSuggestBtn" onclick="suggestAiReply()" style="background: var(--accent-purple); color: #0b0f18; border: none;">
-                    <i class="fas fa-wand-magic-sparkles"></i> AI
-                </button>
+                <button class="btn btn-ai" id="aiSuggestBtn" onclick="suggestAiReply()"><i class="fas fa-wand-magic-sparkles"></i> AI</button>
                 <button class="btn btn-primary" onclick="sendThreadReply()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
@@ -1102,9 +815,7 @@
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const aiModeBtn = document.getElementById('aiModeBtn');
-        const aiOnBtn = document.getElementById('aiOnBtn');
         const modelSelect = document.getElementById('modelSelect');
-        const inboxPreview = document.getElementById('inboxPreview');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const toast = document.getElementById('toast');
@@ -1157,13 +868,21 @@
             return div;
         }
 
+        function addSystemMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'msg system';
+            div.innerHTML = `<div class="msg-bubble">${text}</div>`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
         function addTyping() {
             const div = document.createElement('div');
             div.className = 'msg received';
             div.id = 'typingIndicator';
             div.innerHTML = `
                 <div class="typing-indicator">
-                    <span>กำลังพิมพ์</span>
+                    <span style="color:#999;font-size:12px;">กำลังพิมพ์</span>
                     <div class="typing-dots"><span></span><span></span><span></span></div>
                 </div>
             `;
@@ -1178,33 +897,18 @@
 
         function clearChat() {
             chatMessages.innerHTML = `
-                <div class="msg received">
-                    <div class="msg-bubble">
-                        💬 แชทถูกล้างแล้ว<br>
-                        <span style="color: var(--text-muted); font-size: 12px;">พร้อมใช้งาน</span>
-                    </div>
+                <div class="msg system">
+                    <div class="msg-bubble">💬 แชทถูกล้างแล้ว</div>
                 </div>
             `;
             showToast('🗑️ ล้างแชทแล้ว', 'success');
         }
 
-        function updateStats(sent, received, users, quota) {
-            document.getElementById('sentCount').textContent = sent || 0;
-            document.getElementById('receivedCount').textContent = received || 0;
-            document.getElementById('userCount').textContent = users || 0;
-            if (quota !== undefined) {
-                document.getElementById('quotaDisplay').textContent = quota;
-                document.getElementById('quotaChange').textContent = quota > 80 ? '⚠️ ใกล้เต็ม' : '✅ เพียงพอ';
-                document.getElementById('quotaChange').className = 'stat-change ' + (quota > 80 ? 'negative' : 'positive');
-            }
-        }
-
         /* ──────────────── AI MODE ──────────────── */
         function toggleAiMode() {
             aiMode = !aiMode;
-            aiModeBtn.textContent = aiMode ? '🤖 ON' : '🤖 OFF';
+            aiModeBtn.textContent = aiMode ? '🤖 AI ON' : '🤖 AI OFF';
             aiModeBtn.classList.toggle('active', aiMode);
-            aiOnBtn.classList.toggle('active', aiMode);
             messageInput.placeholder = aiMode ? 'ถามอะไรก็ได้กับ AI...' : 'พิมพ์ข้อความ...';
         }
 
@@ -1301,7 +1005,7 @@
                 const data = await callGas('sendText', { message: text });
                 removeTyping();
                 if (data.success) {
-                    addMessage('✅ ส่งข้อความสำเร็จ!', 'received', 'ส่งถึงผู้ใช้');
+                    addSystemMessage('✅ ส่งข้อความสำเร็จ!');
                     showToast('✅ ส่งข้อความสำเร็จ', 'success');
                 } else {
                     addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
@@ -1318,7 +1022,7 @@
 
         /* ──────────────── TOOLS ──────────────── */
         async function getProfile() {
-            addMessage('🔍 กำลังดึงข้อมูลโปรไฟล์...', 'received');
+            addSystemMessage('🔍 กำลังดึงข้อมูลโปรไฟล์...');
             addTyping();
             try {
                 const data = await callGas('getProfile');
@@ -1330,7 +1034,7 @@
                         📱 ID: ${escapeHtml(p.userId || 'N/A')}<br>
                         🌐 Language: ${escapeHtml(p.language || 'N/A')}<br>
                         💬 Status: ${escapeHtml(p.statusMessage || 'No status')}<br>
-                        ${p.pictureUrl ? `<img src="${escapeAttr(p.pictureUrl)}" style="width:40px;margin-top:6px;border-radius:50%;border:2px solid var(--border-color);">` : ''}
+                        ${p.pictureUrl ? `<img src="${escapeAttr(p.pictureUrl)}" style="width:40px;margin-top:6px;border-radius:50%;border:2px solid #e0e0e0;">` : ''}
                     `, 'received', `👤 PROFILE · ${lineStatusLabel(data)}`);
                     showToast(data.lineSent ? '✅ ดึงโปรไฟล์และส่งเข้า LINE แล้ว' : '⚠️ ดึงโปรไฟล์สำเร็จ แต่ส่ง LINE ไม่สำเร็จ',
                         data.lineSent ? 'success' : 'error');
@@ -1345,7 +1049,7 @@
         }
 
         async function getFollowers() {
-            addMessage('👥 กำลังดึงรายชื่อผู้ติดตาม...', 'received');
+            addSystemMessage('👥 กำลังดึงรายชื่อผู้ติดตาม...');
             addTyping();
             try {
                 const data = await callGas('getFollowers', { limit: 20 });
@@ -1372,7 +1076,7 @@
         }
 
         async function getQuota() {
-            addMessage('📊 กำลังตรวจสอบ Quota...', 'received');
+            addSystemMessage('📊 กำลังตรวจสอบ Quota...');
             addTyping();
             try {
                 const data = await callGas('getQuota');
@@ -1388,10 +1092,6 @@
                     `, 'received', `📊 QUOTA · ${lineStatusLabel(data)}`);
                     showToast(data.lineSent ? '✅ Quota checked และส่งเข้า LINE แล้ว' : '⚠️ Quota checked แต่ส่ง LINE ไม่สำเร็จ',
                         data.lineSent ? 'success' : 'error');
-                    // อัปเดต stats
-                    if (q.limit != null && q.used != null) {
-                        updateStats(null, null, null, Math.round((q.used / q.limit) * 100));
-                    }
                 } else {
                     addMessage(`❌ ${data.error || 'ไม่สามารถดึงข้อมูล'}`, 'received');
                 }
@@ -1402,8 +1102,8 @@
             }
         }
 
-        /* ──────────────── INBOX (Global Poll + Preview) ──────────────── */
-        const NOTIFY_STORAGE_KEY = 'lineBotMcp_lastSeenIn_v3';
+        /* ──────────────── INBOX (Global Poll + Modal) ──────────────── */
+        const NOTIFY_STORAGE_KEY = 'lineBotMcp_lastSeenIn_v4';
         let lastSeenIn = {};
         try { lastSeenIn = JSON.parse(localStorage.getItem(NOTIFY_STORAGE_KEY) || '{}'); } catch (_) {}
         const notifiedKeys = new Set();
@@ -1458,67 +1158,73 @@
             try {
                 const data = await callGas('getConversations');
                 if (!data.success) return;
-                let unread = 0;
                 const convs = data.conversations || [];
-                // อัปเดต stats
-                const totalUsers = convs.length;
-                const totalIn = convs.filter(c => c.lastDirection === 'in').length;
-                const totalOut = convs.filter(c => c.lastDirection === 'out').length;
-                updateStats(totalOut, totalIn, totalUsers, null);
-
-                // แสดง preview
-                if (convs.length === 0) {
-                    inboxPreview.innerHTML = `<div class="inbox-empty">ไม่มีข้อความ</div>`;
-                } else {
-                    inboxPreview.innerHTML = convs.slice(0, 5).map(c => {
-                        const isUnread = isConversationUnread(c);
-                        if (isUnread) unread++;
-                        const avatar = c.pictureUrl || '';
-                        const prefix = c.lastDirection === 'out' ? '↩ ' : '';
-                        return `
-                            <div class="inbox-item ${isUnread ? 'unread' : ''}"
-                                 data-user-id="${escapeAttr(c.userId)}"
-                                 data-display-name="${escapeAttr(c.displayName)}"
-                                 data-avatar="${escapeAttr(avatar)}"
-                                 onclick="openThread('${escapeAttr(c.userId)}', '${escapeAttr(c.displayName)}', '${escapeAttr(avatar)}')">
-                                ${avatar ? `<img class="inbox-avatar" src="${escapeAttr(avatar)}">` : `<div class="inbox-avatar"></div>`}
-                                <div class="inbox-info">
-                                    <div class="inbox-name">${escapeHtml(c.displayName)}</div>
-                                    <div class="inbox-preview">${prefix}${escapeHtml((c.lastText || '').slice(0, 40))}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                // badge + toast
-                updateInboxBadge(unread);
+                let unread = 0;
                 convs.forEach(c => {
-                    if (!isConversationUnread(c)) return;
+                    if (isConversationUnread(c)) unread++;
                     const key = c.userId + '|' + c.lastTimestamp;
-                    if (!notifiedKeys.has(key)) {
+                    if (isConversationUnread(c) && !notifiedKeys.has(key)) {
                         notifiedKeys.add(key);
                         showToast(`💬 ข้อความใหม่จาก ${c.displayName}: ${(c.lastText || '').slice(0, 40)}`);
                         playNotifySound();
                     }
                 });
+                updateInboxBadge(unread);
             } catch (_) {}
         }
 
         setInterval(pollGlobalInbox, 6000);
         pollGlobalInbox();
 
-        /* ─── Open Inbox (sidebar button) ─── */
+        /* ─── Open Inbox ─── */
         function openInbox() {
-            // เปิด thread modal แสดงรายการล่าสุด หรือถ้ามี unread ให้เปิดอันแรก
-            pollGlobalInbox();
-            const firstUnread = document.querySelector('.inbox-item.unread');
-            if (firstUnread) {
-                firstUnread.click();
-            } else {
-                const first = document.querySelector('.inbox-item');
-                if (first) first.click();
-                else showToast('📭 ไม่มีข้อความในกล่องรับ', 'info');
+            // เปิด modal และโหลดรายการล่าสุด
+            document.getElementById('threadModal').classList.add('show');
+            // ใช้ API getConversations เพื่อแสดงรายการ
+            loadInboxList();
+        }
+
+        async function loadInboxList() {
+            try {
+                const data = await callGas('getConversations');
+                if (!data.success || !data.conversations.length) {
+                    document.getElementById('threadName').textContent = 'กล่องข้อความ';
+                    document.getElementById('threadAvatar').src = '';
+                    document.getElementById('threadMessages').innerHTML = `
+                        <div class="msg system"><div class="msg-bubble">📭 ไม่มีข้อความ</div></div>
+                    `;
+                    return;
+                }
+                // แสดงรายการใน threadMessages
+                const container = document.getElementById('threadMessages');
+                container.innerHTML = data.conversations.map(c => {
+                    const isUnread = isConversationUnread(c);
+                    const avatar = c.pictureUrl || '';
+                    const prefix = c.lastDirection === 'out' ? '↩ ' : '';
+                    return `
+                        <div class="msg received" style="cursor:pointer;max-width:100%;"
+                             onclick="openThread('${escapeAttr(c.userId)}', '${escapeAttr(c.displayName)}', '${escapeAttr(avatar)}')">
+                            <div class="msg-bubble" style="border-radius:12px;width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;border:${isUnread ? '2px solid #00b900' : '1px solid #e0e0e0'};">
+                                ${avatar ? `<img src="${escapeAttr(avatar)}" style="width:40px;height:40px;border-radius:50%;border:2px solid #e0e0e0;flex-shrink:0;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#e0e0e0;flex-shrink:0;"></div>`}
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:600;font-size:14px;">${escapeHtml(c.displayName)} ${isUnread ? '<span style="color:#00b900;font-size:11px;">● ใหม่</span>' : ''}</div>
+                                    <div style="color:#999;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${prefix}${escapeHtml((c.lastText || '').slice(0, 50))}</div>
+                                    <div style="color:#bbb;font-size:10px;margin-top:2px;">${new Date(c.lastTimestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+                                </div>
+                                <i class="fas fa-chevron-right" style="color:#ccc;"></i>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                document.getElementById('threadName').textContent = '📥 กล่องข้อความ';
+                document.getElementById('threadAvatar').src = '';
+                document.getElementById('threadMessages').scrollTop = 0;
+                // ปิด quote bar
+                document.getElementById('quotePreviewBar').style.display = 'none';
+            } catch (e) {
+                document.getElementById('threadMessages').innerHTML = `
+                    <div class="msg system"><div class="msg-bubble">❌ โหลดไม่สำเร็จ</div></div>
+                `;
             }
         }
 
@@ -1531,7 +1237,6 @@
             document.getElementById('threadModal').classList.add('show');
             await refreshThread();
             markThreadAsRead(userId);
-            // เริ่ม poll ข้อความในเธรด
             if (window._threadPoll) clearInterval(window._threadPoll);
             window._threadPoll = setInterval(refreshThread, 4000);
         }
@@ -1617,7 +1322,7 @@
 
             btn.disabled = true;
             const origLabel = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> คิด...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             try {
                 const { provider, model } = getSelectedProviderModel();
                 const data = await callGas('suggestAI', { question, provider, model });
@@ -1660,17 +1365,17 @@
             try {
                 const data = await callGas('status');
                 if (data.status === 'online') {
-                    statusDot.className = 'status-dot';
+                    statusDot.className = 'dot';
                     statusText.textContent = 'ONLINE';
                 } else {
-                    statusDot.className = 'status-dot offline';
+                    statusDot.className = 'dot offline';
                     statusText.textContent = 'OFFLINE';
                 }
                 if (!data.channelTokenConfigured) {
                     showToast('⚠️ Channel Token ไม่ได้ตั้งค่า', 'error');
                 }
             } catch (_) {
-                statusDot.className = 'status-dot offline';
+                statusDot.className = 'dot offline';
                 statusText.textContent = 'OFFLINE';
             }
         }
@@ -1679,7 +1384,7 @@
         loadAiProviders();
         checkStatus();
         setInterval(checkStatus, 30000);
-        console.log('📊 LINE BOT MCP · Analytics Dashboard ready');
+        console.log('💬 LINE BOT MCP · LINE-style chat ready');
     </script>
 </body>
 </html>
