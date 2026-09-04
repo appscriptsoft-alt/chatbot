@@ -1016,9 +1016,10 @@
     <div class="modal-overlay" id="threadModal">
         <div class="modal">
             <div class="modal-header">
+                <button id="threadBackBtn" class="close-btn" onclick="backToInbox()" title="ย้อนกลับ" style="display:none;"><i class="fas fa-arrow-left"></i></button>
                 <img id="threadAvatar" src="https://ui-avatars.com/api/?name=Inbox&background=00b900&color=fff&size=80&bold=true" alt="" onerror="this.src='https://via.placeholder.com/80/00b900/ffffff?text=LINE'" />
                 <h3 id="threadName">-</h3>
-                <button class="close-btn" onclick="toggleSleep()" title="โหมดหลับ - พักการแจ้งเตือน" style="font-size:14px;"><i class="fas fa-moon"></i></button>
+                <button id="modalSleepBtn" class="close-btn" onclick="toggleSleep()" title="โหมดหลับ - พักการแจ้งเตือน" style="font-size:14px;"><i class="fas fa-moon"></i></button>
                 <button class="close-btn" onclick="closeThread()">✕</button>
             </div>
             <div class="modal-body" id="threadMessages"></div>
@@ -1820,13 +1821,29 @@
         setInterval(pollGlobalInbox, 6000);
         pollGlobalInbox();
 
-        /* ─── Open Inbox ─── */
+        /* ─── Open Inbox / Back ─── */
+        function backToInbox() {
+            if (window._threadPoll) { clearInterval(window._threadPoll); window._threadPoll = null; }
+            currentThreadUserId = null;
+            clearQuoteReply();
+            clearThreadImage();
+            document.getElementById('threadBackBtn').style.display = 'none';
+            document.getElementById('modalFooter').style.display = 'none';
+            loadInboxList();
+        }
         function openInbox() {
             document.getElementById('threadModal').classList.add('show');
+            document.getElementById('threadBackBtn').style.display = 'none';
+            document.getElementById('modalFooter').style.display = 'none';
             loadInboxList();
         }
 
         async function loadInboxList() {
+            // inbox list โหมด: ซ่อนปุ่มย้อนกลับและซ่อน footer ตอบกลับ (แสดงเฉพาะตอนดู thread)
+            const backBtn = document.getElementById('threadBackBtn');
+            const footer = document.getElementById('modalFooter');
+            if (backBtn) backBtn.style.display = 'none';
+            if (footer) footer.style.display = 'none';
             try {
                 const data = await callGas('getConversations');
                 if (!data.success || !data.conversations.length) {
@@ -1893,6 +1910,8 @@
             clearThreadImage();
             document.getElementById('threadName').textContent = displayName;
             document.getElementById('threadAvatar').src = pictureUrl || DEFAULT_AVATAR;
+            document.getElementById('threadBackBtn').style.display = 'flex';
+            document.getElementById('modalFooter').style.display = 'flex';
             document.getElementById('threadModal').classList.add('show');
             // มาร์คว่าอ่านแล้วทันที (persistent บน Sheet) ก่อนโหลดข้อความ — สำหรับ in เท่านั้น, out รอปลายทางตอบกลับ
             await markThreadAsRead(userId);
@@ -1908,6 +1927,8 @@
             currentThreadUserId = null;
             clearQuoteReply();
             clearThreadImage();
+            document.getElementById('threadBackBtn').style.display = 'none';
+            document.getElementById('modalFooter').style.display = 'none';
             if (window._threadPoll) { clearInterval(window._threadPoll);
                 window._threadPoll = null; }
         }
@@ -2144,6 +2165,7 @@
         window.handleThreadImageUpload = handleThreadImageUpload;
         window.clearThreadImage = clearThreadImage;
         window.toggleSleep = toggleSleep;
+        window.backToInbox = backToInbox;
     </script>
 </body>
 </html>
