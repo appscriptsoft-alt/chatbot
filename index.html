@@ -998,7 +998,7 @@
     <div class="modal-overlay" id="threadModal">
         <div class="modal">
             <div class="modal-header">
-                <img id="threadAvatar" src="" alt="" />
+                <img id="threadAvatar" src="https://ui-avatars.com/api/?name=Inbox&background=00b900&color=fff&size=80&bold=true" alt="" onerror="this.src='https://via.placeholder.com/80/00b900/ffffff?text=LINE'" />
                 <h3 id="threadName">-</h3>
                 <button class="close-btn" onclick="closeThread()">✕</button>
             </div>
@@ -1034,6 +1034,7 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzeKGBmX3uQh_4Q1xO_Y7udZGj6tbfipoCjxrytst43QK-dAb3hNKKHloVUbCfyR5fn/exec';
         const VALID_PASSWORD = '654321';
         const GOOGLE_DRIVE_FOLDER_ID = '10ycPVa0Z5M7T-Lrg7HDN63hijhtOth7r';
+        const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=Inbox&background=00b900&color=fff&size=80&bold=true';
 
         /* ──────────────── DOM REFS ──────────────── */
         const chatMessages = document.getElementById('chatMessages');
@@ -1680,9 +1681,10 @@
         async function markThreadAsRead(userId) {
             lastSeenIn[userId] = new Date().toISOString();
             saveLastSeenIn();
-            // ยิงไป backend เพื่อมาร์คว่าอ่านแล้ว (persistent ข้ามเครื่อง) — ทำก่อน poll เพื่อให้ badge อัปเดตตรง
+            // optimistic: ลด badge ทันที ก่อนรอ server
             try { await callGas('markAsRead', { userId }); } catch (_) {}
-            pollGlobalInbox();
+            // ให้ server flush แล้วค่อย poll เพื่อให้ badge ตรง (สมบูรณ์)
+            setTimeout(pollGlobalInbox, 400);
         }
 
         function updateInboxBadge(count) {
@@ -1717,18 +1719,32 @@
                 const data = await callGas('getConversations');
                 if (!data.success) return;
                 const convs = data.conversations || [];
-                let unread = 0;
+                // สมบูรณ์: ใช้ totalUnread จาก server ถ้ามี (ผลรวมข้อความยังไม่อ่าน), fallback นับห้อง
+                let totalUnread = typeof data.totalUnread === 'number' ? data.totalUnread : 0;
+                let unreadConversations = 0;
+                if (typeof data.totalUnread !== 'number') {
+                    convs.forEach(c => { if (isConversationUnread(c)) unreadConversations++; });
+                    totalUnread = unreadConversations;
+                } else {
+                    convs.forEach(c => { if (isConversationUnread(c)) unreadConversations++; });
+                }
+                // แจ้งเตือนเฉพาะเมื่อมีห้องที่ยังไม่อ่านใหม่ หรือข้อความใหม่
                 convs.forEach(c => {
                     const unreadFlag = isConversationUnread(c);
-                    if (unreadFlag) unread++;
-                    const key = c.userId + '|' + c.lastTimestamp;
+                    // key เปลี่ยนเมื่อ unreadCount หรือ timestamp เปลี่ยน เพื่อไม่พลาดกรณีมีข้อความใหม่ในห้องเดิม
+                    const key = c.userId + '|' + c.lastTimestamp + '|' + (c.unreadCount || 0);
                     if (unreadFlag && !notifiedKeys.has(key)) {
                         notifiedKeys.add(key);
-                        showToast(`💬 ข้อความใหม่จาก ${c.displayName}: ${(c.lastText || '').slice(0, 40)}`);
+                        const preview = (c.lastText || '').slice(0, 40);
+                        const cnt = c.unreadCount > 1 ? ` (+${c.unreadCount} ข้อความ)` : '';
+                        showToast(`💬 ข้อความใหม่จาก ${c.displayName}${cnt}: ${preview}`);
                         playNotifySound();
                     }
                 });
-                updateInboxBadge(unread);
+                // badge แสดงจำนวนข้อความยังไม่อ่านทั้งหมด (สมบูรณ์กว่าแค่นับห้อง)
+                updateInboxBadge(totalUnread);
+                // เก็บไว้ให้ loadInboxList ใช้ถ้าต้องการ
+                window._lastConversations = convs;
             } catch (_) {}
         }
 
@@ -1746,7 +1762,7 @@
                 const data = await callGas('getConversations');
                 if (!data.success || !data.conversations.length) {
                     document.getElementById('threadName').textContent = 'กล่องข้อความ';
-                    document.getElementById('threadAvatar').src = '';
+                    document.getElementById('threadAvatar').src = DEFAULT_AVATAR;
                     document.getElementById('threadMessages').innerHTML = `
                         <div class="msg system"><div class="msg-bubble">📭 ไม่มีข้อความ</div></div>
                     `;
@@ -1766,27 +1782,32 @@
                             statusHtml = '<span style="color:#999;font-size:10px;" title="LINE: รอปลายทางเปิดอ่าน"><i class="fas fa-check"></i> ส่งแล้ว</span>';
                         }
                     } else if (isUnread) {
-                        statusHtml = '<span style="color:#ff3b30;font-size:10px;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน</span>';
+                        const cnt = c.unreadCount > 1 ? ` (${c.unreadCount})` : '';
+                        statusHtml = '<span style="color:#ff3b30;font-size:10px;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน' + cnt + '</span>';
                     } else {
                         statusHtml = '<span style="color:#4caf50;font-size:10px;"><i class="fas fa-eye"></i> อ่านแล้ว</span>';
                     }
+                    const unreadBadge = isUnread && c.unreadCount > 1
+                        ? `<span style="background:#ff3b30;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;line-height:20px;text-align:center;border-radius:10px;padding:0 6px;flex-shrink:0;">${c.unreadCount}</span>`
+                        : (isUnread ? `<span style="background:#00b900;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;padding:0 5px;flex-shrink:0;">●</span>` : '');
                     return `
                         <div class="msg received" style="cursor:pointer;max-width:100%;"
                              onclick="openThread('${escapeAttr(c.userId)}', '${escapeAttr(c.displayName)}', '${escapeAttr(avatar)}')">
-                            <div class="msg-bubble" style="border-radius:12px;width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;border:${isUnread ? '2px solid #00b900' : '1px solid #e0e0e0'};">
-                                ${avatar ? `<img src="${escapeAttr(avatar)}" style="width:40px;height:40px;border-radius:50%;border:2px solid #e0e0e0;flex-shrink:0;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#e0e0e0;flex-shrink:0;"></div>`}
+                            <div class="msg-bubble" style="border-radius:12px;width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;border:${isUnread ? '2px solid #00b900' : '1px solid #e0e0e0'};background:${isUnread ? '#f0fff0' : '#ffffff'};">
+                                ${avatar ? `<img src="${escapeAttr(avatar)}" style="width:40px;height:40px;border-radius:50%;border:2px solid ${isUnread ? '#00b900' : '#e0e0e0'};flex-shrink:0;">` : `<div style="width:40px;height:40px;border-radius:50%;background:${isUnread ? '#00b900' : '#e0e0e0'};flex-shrink:0;"></div>`}
                                 <div style="flex:1;min-width:0;">
-                                    <div style="font-weight:600;font-size:14px;">${escapeHtml(c.displayName)} ${isUnread ? '<span style="color:#00b900;font-size:11px;">● ใหม่</span>' : ''}</div>
+                                    <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;">${escapeHtml(c.displayName)} ${isUnread ? '<span style="color:#00b900;font-size:11px;">● ใหม่</span>' : ''}</div>
                                     <div style="color:#999;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${prefix}${escapeHtml((c.lastText || '').slice(0, 50))}</div>
                                     <div style="display:flex;align-items:center;gap:8px;margin-top:2px;"><span style="color:#bbb;font-size:10px;">${new Date(c.lastTimestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>${statusHtml}</div>
                                 </div>
+                                ${unreadBadge}
                                 <i class="fas fa-chevron-right" style="color:#ccc;"></i>
                             </div>
                         </div>
                     `;
                 }).join('');
                 document.getElementById('threadName').textContent = '📥 กล่องข้อความ';
-                document.getElementById('threadAvatar').src = '';
+                document.getElementById('threadAvatar').src = DEFAULT_AVATAR;
                 document.getElementById('threadMessages').scrollTop = 0;
                 document.getElementById('quotePreviewBar').style.display = 'none';
             } catch (e) {
@@ -1802,7 +1823,7 @@
             clearQuoteReply();
             clearThreadImage();
             document.getElementById('threadName').textContent = displayName;
-            document.getElementById('threadAvatar').src = pictureUrl || '';
+            document.getElementById('threadAvatar').src = pictureUrl || DEFAULT_AVATAR;
             document.getElementById('threadModal').classList.add('show');
             // มาร์คว่าอ่านแล้วทันที (persistent บน Sheet) ก่อนโหลดข้อความ — สำหรับ in เท่านั้น, out รอปลายทางตอบกลับ
             await markThreadAsRead(userId);
@@ -1822,6 +1843,7 @@
                 window._threadPoll = null; }
         }
 
+        let _autoMarkPending = false;
         async function refreshThread() {
             if (!currentThreadUserId) return;
             try {
@@ -1838,7 +1860,7 @@
                             statusHtml = '<div class="read-status sent" title="รอปลายทางเปิดอ่าน/ตอบกลับ (อ้างอิง LINE webhook)"><i class="fas fa-check"></i> ส่งแล้ว</div>';
                         }
                     } else {
-                        // in = ข้อความจากผู้ใช้ — อ่านแล้วต่อเมื่อแอดมินเปิด thread (Sheet!I=TRUE ผ่าน markAsRead)
+                        // in = ข้อความจากผู้ใช้ — อ่านแล้วต่อเมื่อแอดมินเปิด thread (Sheet!I=TRUE ผ่าน markAsRead) — สมบูรณ์
                         if (m.isRead || m.readStatus === 'read') {
                             statusHtml = '<div class="read-status read" style="justify-content:flex-start;color:#4caf50;"><i class="fas fa-eye"></i> อ่านแล้ว</div>';
                         } else {
@@ -1858,6 +1880,18 @@
                 `;
                 }).join('');
                 container.scrollTop = container.scrollHeight;
+                // สมบูรณ์: ถ้ามีข้อความ in ยังไม่อ่านค้างอยู่ขณะที่เปิด thread อยู่ ให้ auto-mark ทันที (ไม่ต้องปิดเปิดใหม่)
+                const hasUnreadIn = data.messages.some(m => m.direction === 'in' && !m.isRead);
+                const unreadCnt = data.unreadCount || data.messages.filter(m=>m.direction==='in' && !m.isRead).length;
+                if (hasUnreadIn && !_autoMarkPending) {
+                    _autoMarkPending = true;
+                    try { await callGas('markAsRead', { userId: currentThreadUserId }); } catch(_){}
+                    setTimeout(() => { _autoMarkPending = false; pollGlobalInbox(); }, 500);
+                }
+                // อัปเดต badge ทันทีหลัง render thread เพื่อให้ตัวเลขตรง (กรณีมาจาก totalUnread)
+                if (typeof data.unreadCount === 'number') {
+                    // จะซิงค์ผ่าน pollGlobalInbox ครั้งถัดไป
+                }
             } catch (_) {}
         }
 
