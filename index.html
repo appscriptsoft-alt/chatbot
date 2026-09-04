@@ -1664,15 +1664,20 @@
         }
 
         function isConversationUnread(c) {
+            // ถ้า server ส่ง unreadCount/isUnread มา ให้ใช้ค่านั้น (persistent)
+            if (typeof c.unreadCount === 'number') return c.unreadCount > 0;
+            if (typeof c.isUnread === 'boolean') return c.isUnread;
             if (c.lastDirection !== 'in') return false;
             const seen = lastSeenIn[c.userId];
             return !seen || new Date(c.lastTimestamp) > new Date(seen);
         }
 
-        function markThreadAsRead(userId) {
+        async function markThreadAsRead(userId) {
             lastSeenIn[userId] = new Date().toISOString();
             saveLastSeenIn();
             pollGlobalInbox();
+            // ยิงไป backend เพื่อมาร์คว่าอ่านแล้ว (persistent ข้ามเครื่อง)
+            try { await callGas('markAsRead', { userId }); } catch (_) {}
         }
 
         function updateInboxBadge(count) {
@@ -1709,9 +1714,10 @@
                 const convs = data.conversations || [];
                 let unread = 0;
                 convs.forEach(c => {
-                    if (isConversationUnread(c)) unread++;
+                    const unreadFlag = isConversationUnread(c);
+                    if (unreadFlag) unread++;
                     const key = c.userId + '|' + c.lastTimestamp;
-                    if (isConversationUnread(c) && !notifiedKeys.has(key)) {
+                    if (unreadFlag && !notifiedKeys.has(key)) {
                         notifiedKeys.add(key);
                         showToast(`💬 ข้อความใหม่จาก ${c.displayName}: ${(c.lastText || '').slice(0, 40)}`);
                         playNotifySound();
@@ -1790,8 +1796,9 @@
             document.getElementById('threadName').textContent = displayName;
             document.getElementById('threadAvatar').src = pictureUrl || '';
             document.getElementById('threadModal').classList.add('show');
+            // มาร์คว่าอ่านแล้วทันที (persistent บน Sheet) ก่อนโหลดข้อความ
+            await markThreadAsRead(userId);
             await refreshThread();
-            markThreadAsRead(userId);
             if (window._threadPoll) clearInterval(window._threadPoll);
             window._threadPoll = setInterval(refreshThread, 4000);
         }
@@ -1818,6 +1825,13 @@
                             statusHtml = '<div class="read-status read"><i class="fas fa-check-double"></i> อ่านแล้ว</div>';
                         } else {
                             statusHtml = '<div class="read-status sent"><i class="fas fa-check"></i> ส่งแล้ว</div>';
+                        }
+                    } else {
+                        // in = ข้อความจากผู้ใช้: แสดงว่าแอดมินเปิดอ่านหรือยัง (persistent)
+                        if (m.isRead || m.readStatus === 'read') {
+                            statusHtml = '<div class="read-status read" style="justify-content:flex-start;color:#4caf50;"><i class="fas fa-eye"></i> อ่านแล้ว</div>';
+                        } else {
+                            statusHtml = '<div class="read-status" style="justify-content:flex-start;color:#ff3b30;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน</div>';
                         }
                     }
                     return `
