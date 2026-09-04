@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🕹️ LINE BOT MCP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        /* ─────────────────────── Reset & Variables ─────────────────────── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #1c2333;
+            --bg-input: #0d1117;
+            --bg-hover: #252d3f;
+            --border-color: #30363d;
+            --border-light: #484f58;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #bc8cff;
+            --accent-gold: #d29922;
+            --accent-cyan: #39d2c0;
+            --accent-pink: #f778ba;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* ─────────────────────── แอปคอนเทนเนอร์ ─────────────────────── */
+        .app-wrapper {
+            width: 100%;
+            max-width: 520px;
+            height: 96vh;
+            max-height: 820px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ─────────────────────── Header ─────────────────────── */
+        .app-header {
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .app-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-header .brand .logo {
+            font-size: 22px;
+        }
+
+        .app-header .brand h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 4px 12px 4px 8px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse-dot 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .status-dot.offline {
+            background: #da3633;
+        }
+
+        /* ─────────────────────── Chat Area ─────────────────────── */
+        .chat-area {
+            flex: 1;
+            padding: 16px 18px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* ─── Messages ─── */
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fade-up 0.25s ease-out;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-bubble {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            line-height: 1.6;
+            word-break: break-word;
+            position: relative;
+        }
+
+        .message.sent .message-bubble {
+            background: var(--accent-blue);
+            color: #0d1117;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received .message-bubble {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.ai .message-bubble {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-purple);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message .timestamp {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .message.sent .timestamp {
+            text-align: right;
+        }
+
+        .message .meta {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        /* ─── Typing ─── */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing-bounce 1.4s ease-in-out infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* ─────────────────────── Controls Bar ─────────────────────── */
+        .controls-bar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .pixel-toggle,
+        .pixel-select {
+            font-family: var(--font);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .pixel-toggle:hover,
+        .pixel-select:hover {
+            border-color: var(--border-light);
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .pixel-toggle.on {
+            background: var(--accent-purple);
+            color: #0d1117;
+            border-color: var(--accent-purple);
+        }
+
+        .pixel-select {
+            min-width: 120px;
+            flex: 1;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 32px;
+        }
+
+        .pixel-select optgroup {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* ─────────────────────── Input Area ─────────────────────── */
+        .input-area {
+            padding: 10px 16px 16px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-row input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        .input-row input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-row button {
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--accent-blue);
+            color: #0d1117;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .input-row button:hover:not(:disabled) {
+            background: #79c0ff;
+            transform: scale(1.02);
+        }
+
+        .input-row button:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .input-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ─── Tools Bar ─── */
+        .tools-bar {
+            display: flex;
+            gap: 6px;
+            padding-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tools-bar button {
+            font-family: var(--font);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .tools-bar button:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-light);
+        }
+
+        .tools-bar button:active {
+            transform: scale(0.96);
+        }
+
+        .inbox-badge {
+            display: none;
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: var(--accent-pink);
+            color: #0d1117;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 20px;
+            line-height: 18px;
+            text-align: center;
+        }
+
+        /* ─────────────────────── Toast ─────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3000;
+            pointer-events: none;
+            max-width: 90vw;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            border-color: #da3633;
+            color: #f778ba;
+        }
+
+        .toast.success {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* ─────────────────────── Modals ─────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .modal textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+        }
+
+        .modal textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions button {
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: var(--radius-xs);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-actions .btn-primary {
+            background: var(--accent-blue);
+            color: #0d1117;
+        }
+
+        .modal-actions .btn-primary:hover {
+            background: #79c0ff;
+        }
+
+        .modal-actions .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-actions .btn-secondary:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* ─── Inbox List ─── */
+        .inbox-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+
+        .inbox-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .inbox-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .inbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .inbox-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-light);
+        }
+
+        .inbox-item:active {
+            transform: scale(0.98);
+        }
+
+        .inbox-item.unread {
+            border-color: var(--accent-pink);
+        }
+
+        .inbox-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: var(--bg-input);
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+
+        .inbox-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .inbox-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .inbox-item.unread .inbox-name::after {
+            content: ' ● ใหม่';
+            color: var(--accent-pink);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .inbox-preview {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .inbox-empty {
+            padding: 30px 10px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* ─── Thread Modal ─── */
+        .thread-modal .modal {
+            padding: 0;
+            max-width: 460px;
+            height: 85vh;
+        }
+
+        .thread-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .thread-header img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            object-fit: cover;
+        }
+
+        .thread-header .thread-name {
+            font-weight: 700;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .thread-header button {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 6px;
+            transition: var(--transition);
+        }
+
+        .thread-header button:hover {
+            color: var(--text-primary);
+        }
+
+        .thread-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--bg-primary);
+        }
+
+        .thread-messages .message {
+            max-width: 88%;
+        }
+
+        .quote-reply-btn {
+            font-family: var(--font);
+            font-size: 10px;
+            font-weight: 500;
+            background: transparent;
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+            border-radius: var(--radius-xs);
+            padding: 2px 8px;
+            margin-top: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-block;
+        }
+
+        .quote-reply-btn:hover {
+            background: var(--accent-cyan);
+            color: #0d1117;
+        }
+
+        .quote-preview-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .quote-preview-bar .quote-text {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border-left: 3px solid var(--accent-pink);
+            padding-left: 10px;
+        }
+
+        .quote-preview-bar button {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .quote-preview-bar button:hover {
+            color: var(--text-primary);
+        }
+
+        .thread-reply-row {
+            display: flex;
+            gap: 10px;
+            padding: 10px 14px 14px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .thread-reply-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .thread-reply-row input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .thread-reply-row button {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--accent-blue);
+            color: #0d1117;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .thread-reply-row button:hover:not(:disabled) {
+            background: #79c0ff;
+        }
+
+        #aiSuggestBtn {
+            background: var(--accent-purple);
+        }
+
+        #aiSuggestBtn:hover:not(:disabled) {
+            background: #d2b0ff;
+        }
+
+        /* ─────────────────────── Responsive ─────────────────────── */
+        @media (max-width: 480px) {
+            body { padding: 0; }
+            .app-wrapper { max-height: 100vh; border-radius: 0; border: none; }
+            .modal { margin: 10px; max-height: 90vh; }
+            .tools-bar button { font-size: 10px; padding: 4px 10px; }
+            .controls-bar .pixel-select { min-width: 80px; }
+        }
+
+        @media (max-width: 400px) {
+            .app-header .brand h1 { font-size: 13px; }
+            .status-badge { font-size: 10px; padding: 2px 10px 2px 6px; }
+            .input-row button { padding: 10px 14px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ──────── App ──────── -->
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <span class="logo">🕹️</span>
+                <h1>LINE BOT MCP</h1>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">ONLINE</span>
+            </div>
+        </header>
+
+        <!-- Chat -->
+        <div class="chat-area" id="chatArea">
+            <div class="message received">
+                <div class="message-bubble">
+                    👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
+                    <span style="color: var(--text-muted); font-size: 12px;">พิมพ์ข้อความเพื่อส่ง หรือใช้เครื่องมือด้านล่าง</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+            <button class="pixel-toggle" id="aiModeBtn" onclick="toggleAiMode()">🤖 AI: OFF</button>
+            <select class="pixel-select" id="modelSelect">
+                <option value="">⏳ กำลังโหลด...</option>
+            </select>
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+            <div class="input-row">
+                <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..."
+                       onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button id="sendBtn" onclick="sendMessage()">ส่ง</button>
+            </div>
+            <div class="tools-bar">
+                <button onclick="getProfile()">👤 PROFILE</button>
+                <button onclick="getFollowers()">👥 FOLLOWERS</button>
+                <button onclick="getQuota()">📊 QUOTA</button>
+                <button onclick="openInbox()">📥 INBOX <span class="inbox-badge" id="inboxBadge"></span></button>
+                <button onclick="clearChat()">🗑️ CLEAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ──────── Inbox List Modal ──────── -->
+    <div class="modal-overlay inbox-modal" id="inboxListModal">
+        <div class="modal">
+            <h3>📥 INBOX</h3>
+            <div class="inbox-list" id="inboxListContainer">
+                <div class="inbox-empty">กำลังโหลด...</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeInboxList()">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ──────── Thread Modal ──────── -->
+    <div class="modal-overlay thread-modal" id="inboxThreadModal">
+        <div class="modal">
+            <div class="thread-header">
+                <img id="threadUserAvatar" src="" alt="">
+                <span class="thread-name" id="threadUserName">-</span>
+                <button onclick="closeThread()">✕</button>
+            </div>
+            <div class="thread-messages" id="threadMessages"></div>
+            <div class="quote-preview-bar" id="quotePreviewBar">
+                <span class="quote-text"></span>
+                <button onclick="clearQuoteReply()">✕ ยกเลิก</button>
+            </div>
+            <div class="thread-reply-row">
+                <input type="text" id="threadReplyInput" placeholder="พิมพ์ตอบกลับ..."
+                       onkeypress="if(event.key === 'Enter') sendThreadReply()">
+                <button id="aiSuggestBtn" onclick="suggestAiReply()">🤖 AI แนะนำ</button>
+                <button onclick="sendThreadReply()">ส่ง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ──────── Toast ──────── -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ──────────────── CONFIG ──────────────── */
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2WnkNz4_CYkaOPQXZGu6QDlF2xRw9gXaXm1c8t733xVhT627S3ySfO_Pp5eYJHQI/exec';
+
+        /* ──────────────── DOM refs ──────────────── */
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const aiModeBtn = document.getElementById('aiModeBtn');
+        const modelSelect = document.getElementById('modelSelect');
+        let aiMode = false;
+
+        /* ──────────────── Helpers ──────────────── */
+        function getTimestamp() {
+            return new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str || '';
+            return d.innerHTML;
+        }
+
+        function escapeAttr(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast';
+            if (type === 'error') t.classList.add('error');
+            else if (type === 'success') t.classList.add('success');
+            t.classList.add('show');
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        function lineStatusLabel(data) {
+            return data.lineSent
+                ? '📲 ส่งเข้า LINE แล้ว'
+                : `⚠️ ไม่ได้ส่งเข้า LINE${data.lineError ? ' (' + data.lineError + ')' : ''}`;
+        }
+
+        /* ──────────────── Chat UI ──────────────── */
+        function addMessage(text, type = 'received', meta = '') {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = `
+                <div class="message-bubble">
+                    ${text}
+                    ${meta ? `<div class="meta">${meta}</div>` : ''}
+                    <div class="timestamp">${getTimestamp()}</div>
+                </div>
+            `;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return div;
+        }
+
+        function addTyping() {
+            const div = document.createElement('div');
+            div.className = 'message received';
+            div.id = 'typingIndicator';
+            div.innerHTML = `
+                <div class="typing-indicator">
+                    <span>กำลังพิมพ์</span>
+                    <div class="typing-dots"><span></span><span></span><span></span></div>
+                </div>
+            `;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function removeTyping() {
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
+        }
+
+        function clearChat() {
+            chatArea.innerHTML = `
+                <div class="message received">
+                    <div class="message-bubble">
+                        💬 แชทถูกล้างแล้ว<br>
+                        <span style="color: var(--text-muted); font-size: 12px;">พร้อมใช้งาน</span>
+                    </div>
+                </div>
+            `;
+            showToast('🗑️ ล้างแชทแล้ว', 'success');
+        }
+
+        /* ──────────────── AI Mode ──────────────── */
+        function toggleAiMode() {
+            aiMode = !aiMode;
+            aiModeBtn.textContent = aiMode ? '🤖 AI: ON' : '🤖 AI: OFF';
+            aiModeBtn.classList.toggle('on', aiMode);
+            messageInput.placeholder = aiMode ? 'ถามอะไรก็ได้กับ AI...' : 'พิมพ์ข้อความ...';
+        }
+
+        function getSelectedProviderModel() {
+            const val = modelSelect.value || '';
+            const sep = val.indexOf('::');
+            if (sep === -1) return { provider: undefined, model: val || undefined };
+            return { provider: val.slice(0, sep), model: val.slice(sep + 2) };
+        }
+
+        /* ──────────────── Load AI Providers ──────────────── */
+        async function loadAiProviders() {
+            try {
+                const data = await callGas('getAIProviders');
+                if (!data.success) {
+                    modelSelect.innerHTML = `<option value="">❌ โหลดไม่สำเร็จ</option>`;
+                    return;
+                }
+                const providers = data.providers;
+                const current = data.current || {};
+                modelSelect.innerHTML = '';
+                Object.keys(providers).forEach(pk => {
+                    const cfg = providers[pk];
+                    const group = document.createElement('optgroup');
+                    group.label = cfg.label;
+                    cfg.models.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = pk + '::' + m;
+                        opt.textContent = m;
+                        if (pk === current.provider && m === current.model) opt.selected = true;
+                        group.appendChild(opt);
+                    });
+                    modelSelect.appendChild(group);
+                });
+                // fallback
+                const hasSelected = Array.from(modelSelect.options).some(o => o.selected);
+                if (!hasSelected && current.provider && current.model) {
+                    const opt = document.createElement('option');
+                    opt.value = current.provider + '::' + current.model;
+                    opt.textContent = `${current.model} (กำหนดเอง)`;
+                    opt.selected = true;
+                    modelSelect.appendChild(opt);
+                }
+            } catch (e) {
+                modelSelect.innerHTML = `<option value="">❌ เชื่อมต่อไม่ได้</option>`;
+            }
+        }
+
+        /* ──────────────── GAS Call ──────────────── */
+        async function callGas(action, payload = {}) {
+            const resp = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action, payload })
+            });
+            const raw = await resp.text();
+            try { return JSON.parse(raw); } catch (_) {
+                throw new Error(`Server error (${resp.status}): ${raw.slice(0, 150)}`);
+            }
+        }
+
+        /* ──────────────── Send Message ──────────────── */
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'sent');
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            addTyping();
+
+            if (aiMode) {
+                try {
+                    const { provider, model } = getSelectedProviderModel();
+                    const data = await callGas('askAI', { question: text, provider, model });
+                    removeTyping();
+                    if (data.success) {
+                        addMessage(data.answer, 'ai', `🤖 ${data.provider}/${data.model} · ${lineStatusLabel(data)}`);
+                        showToast(data.lineSent ? '✅ ตอบแล้วและส่งเข้า LINE' : '⚠️ ตอบแล้ว แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ? 'success' : 'error');
+                    } else {
+                        addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
+                        showToast('❌ AI ตอบไม่สำเร็จ', 'error');
+                    }
+                } catch (e) {
+                    removeTyping();
+                    addMessage(`❌ Connection error: ${e.message}`, 'received');
+                    showToast('❌ Connection error', 'error');
+                } finally {
+                    sendBtn.disabled = false;
+                }
+                return;
+            }
+
+            try {
+                const data = await callGas('sendText', { message: text });
+                removeTyping();
+                if (data.success) {
+                    addMessage('✅ ส่งข้อความสำเร็จ!', 'received', 'ส่งถึงผู้ใช้');
+                    showToast('✅ ส่งข้อความสำเร็จ', 'success');
+                } else {
+                    addMessage(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'received');
+                    showToast('❌ ส่งข้อความไม่สำเร็จ', 'error');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Connection error: ${e.message}`, 'received');
+                showToast('❌ Connection error', 'error');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        /* ──────────────── Tools ──────────────── */
+        async function getProfile() {
+            addMessage('🔍 กำลังดึงข้อมูลโปรไฟล์...', 'received');
+            addTyping();
+            try {
+                const data = await callGas('getProfile');
+                removeTyping();
+                if (data.success && data.profile) {
+                    const p = data.profile;
+                    addMessage(`
+                        👤 <strong>${escapeHtml(p.displayName || 'N/A')}</strong><br>
+                        📱 ID: ${escapeHtml(p.userId || 'N/A')}<br>
+                        🌐 Language: ${escapeHtml(p.language || 'N/A')}<br>
+                        💬 Status: ${escapeHtml(p.statusMessage || 'No status')}<br>
+                        ${p.pictureUrl ? `<img src="${escapeAttr(p.pictureUrl)}" style="width:40px;margin-top:6px;border-radius:50%;border:2px solid var(--border-color);">` : ''}
+                    `, 'received', `👤 PROFILE · ${lineStatusLabel(data)}`);
+                    showToast(data.lineSent ? '✅ ดึงโปรไฟล์และส่งเข้า LINE แล้ว' : '⚠️ ดึงโปรไฟล์สำเร็จ แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ? 'success' : 'error');
+                } else {
+                    addMessage(`❌ ${data.error || 'ไม่พบข้อมูล'}`, 'received');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Error: ${e.message}`, 'received');
+                showToast('❌ Error fetching profile', 'error');
+            }
+        }
+
+        async function getFollowers() {
+            addMessage('👥 กำลังดึงรายชื่อผู้ติดตาม...', 'received');
+            addTyping();
+            try {
+                const data = await callGas('getFollowers', { limit: 20 });
+                removeTyping();
+                if (data.success && data.data) {
+                    const ids = data.data.userIds || [];
+                    const next = data.data.next || 'ไม่มีต่อ';
+                    addMessage(`
+                        📊 พบผู้ติดตาม <strong>${ids.length}</strong> คน<br>
+                        🔄 Next token: ${next}<br>
+                        ${ids.slice(0, 5).map(id => `📱 ${escapeHtml(id)}`).join('<br>')}
+                        ${ids.length > 5 ? `<br>...และอีก ${ids.length - 5} คน` : ''}
+                    `, 'received', `👥 FOLLOWERS · ${lineStatusLabel(data)}`);
+                    showToast(data.lineSent ? `✅ พบ ${ids.length} คน และส่งเข้า LINE แล้ว` : `⚠️ พบ ${ids.length} คน แต่ส่ง LINE ไม่สำเร็จ`, data.lineSent ? 'success' : 'error');
+                } else {
+                    addMessage(`❌ ${data.error || 'ไม่พบข้อมูล'}`, 'received');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Error: ${e.message}`, 'received');
+                showToast('❌ Error fetching followers', 'error');
+            }
+        }
+
+        async function getQuota() {
+            addMessage('📊 กำลังตรวจสอบ Quota...', 'received');
+            addTyping();
+            try {
+                const data = await callGas('getQuota');
+                removeTyping();
+                if (data.success && data.quota) {
+                    const q = data.quota;
+                    addMessage(`
+                        📊 <strong>Message Quota</strong><br>
+                        📈 Limit: ${q.limit ?? 'N/A'}<br>
+                        📉 Used: ${q.used ?? 'N/A'}<br>
+                        📊 Remaining: ${(q.limit != null && q.used != null) ? q.limit - q.used : 'N/A'}
+                    `, 'received', `📊 QUOTA · ${lineStatusLabel(data)}`);
+                    showToast(data.lineSent ? '✅ Quota checked และส่งเข้า LINE แล้ว' : '⚠️ Quota checked แต่ส่ง LINE ไม่สำเร็จ', data.lineSent ? 'success' : 'error');
+                } else {
+                    addMessage(`❌ ${data.error || 'ไม่สามารถดึงข้อมูล'}`, 'received');
+                }
+            } catch (e) {
+                removeTyping();
+                addMessage(`❌ Error: ${e.message}`, 'received');
+                showToast('❌ Quota error', 'error');
+            }
+        }
+
+        /* ──────────────── Inbox (global poll + modals) ──────────────── */
+        const NOTIFY_STORAGE_KEY = 'lineBotMcp_lastSeenIn_v2';
+        let lastSeenIn = {};
+        try { lastSeenIn = JSON.parse(localStorage.getItem(NOTIFY_STORAGE_KEY) || '{}'); } catch (_) {}
+        const notifiedKeys = new Set();
+        let inboxPollInterval = null;
+        let currentThreadUserId = null;
+        let currentQuoteToken = null;
+        let currentQuotePreviewText = '';
+
+        function saveLastSeenIn() {
+            try { localStorage.setItem(NOTIFY_STORAGE_KEY, JSON.stringify(lastSeenIn)); } catch (_) {}
+        }
+
+        function isConversationUnread(c) {
+            if (c.lastDirection !== 'in') return false;
+            const seen = lastSeenIn[c.userId];
+            return !seen || new Date(c.lastTimestamp) > new Date(seen);
+        }
+
+        function markThreadAsRead(userId) {
+            lastSeenIn[userId] = new Date().toISOString();
+            saveLastSeenIn();
+            pollGlobalInbox();
+        }
+
+        function updateInboxBadge(count) {
+            const badge = document.getElementById('inboxBadge');
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : String(count);
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function playNotifySound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'square';
+                o.frequency.value = 880;
+                g.gain.value = 0.04;
+                o.connect(g);
+                g.connect(ctx.destination);
+                o.start();
+                setTimeout(() => { o.stop(); ctx.close(); }, 150);
+            } catch (_) {}
+        }
+
+        async function pollGlobalInbox() {
+            try {
+                const data = await callGas('getConversations');
+                if (!data.success) return;
+                let unread = 0;
+                data.conversations.forEach(c => {
+                    if (!isConversationUnread(c)) return;
+                    unread++;
+                    const key = c.userId + '|' + c.lastTimestamp;
+                    if (!notifiedKeys.has(key)) {
+                        notifiedKeys.add(key);
+                        showToast(`💬 ข้อความใหม่จาก ${c.displayName}: ${(c.lastText || '').slice(0, 40)}`);
+                        playNotifySound();
+                    }
+                });
+                updateInboxBadge(unread);
+                if (document.getElementById('inboxListModal').classList.contains('show')) {
+                    refreshInboxList();
+                }
+            } catch (_) {}
+        }
+
+        setInterval(pollGlobalInbox, 6000);
+        pollGlobalInbox();
+
+        /* ─── Inbox List ─── */
+        async function openInbox() {
+            document.getElementById('inboxListModal').classList.add('show');
+            await refreshInboxList();
+            stopInboxPolling();
+            inboxPollInterval = setInterval(refreshInboxList, 4000);
+        }
+
+        function closeInboxList() {
+            document.getElementById('inboxListModal').classList.remove('show');
+            stopInboxPolling();
+        }
+
+        function stopInboxPolling() {
+            if (inboxPollInterval) { clearInterval(inboxPollInterval); inboxPollInterval = null; }
+        }
+
+        async function refreshInboxList() {
+            const container = document.getElementById('inboxListContainer');
+            try {
+                const data = await callGas('getConversations');
+                if (!data.success) {
+                    container.innerHTML = `<div class="inbox-empty">❌ ${escapeHtml(data.error || 'โหลดไม่สำเร็จ')}</div>`;
+                    return;
+                }
+                if (!data.conversations.length) {
+                    container.innerHTML = '<div class="inbox-empty">ยังไม่มีข้อความเข้ามา</div>';
+                    return;
+                }
+                container.innerHTML = data.conversations.map(c => {
+                    const avatar = c.pictureUrl || '';
+                    const prefix = c.lastDirection === 'out' ? '↩ ' : '';
+                    const isUnread = isConversationUnread(c);
+                    return `
+                        <div class="inbox-item ${isUnread ? 'unread' : ''}"
+                             data-user-id="${escapeAttr(c.userId)}"
+                             data-display-name="${escapeAttr(c.displayName)}"
+                             data-avatar="${escapeAttr(avatar)}">
+                            ${avatar ? `<img class="inbox-avatar" src="${escapeAttr(avatar)}">` : `<div class="inbox-avatar"></div>`}
+                            <div class="inbox-info">
+                                <div class="inbox-name">${escapeHtml(c.displayName)}</div>
+                                <div class="inbox-preview">${prefix}${escapeHtml((c.lastText || '').slice(0, 50))}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                if (container.innerHTML.includes('กำลังโหลด')) {
+                    container.innerHTML = `<div class="inbox-empty">❌ ${escapeHtml(e.message || 'เชื่อมต่อไม่ได้')}</div>`;
+                }
+            }
+        }
+
+        document.getElementById('inboxListContainer').addEventListener('click', function(e) {
+            const item = e.target.closest('.inbox-item');
+            if (!item) return;
+            openThread(item.dataset.userId, item.dataset.displayName, item.dataset.avatar);
+        });
+
+        /* ─── Thread ─── */
+        async function openThread(userId, displayName, pictureUrl) {
+            currentThreadUserId = userId;
+            clearQuoteReply();
+            document.getElementById('threadUserName').textContent = displayName;
+            document.getElementById('threadUserAvatar').src = pictureUrl || '';
+            document.getElementById('inboxThreadModal').classList.add('show');
+            await refreshThread();
+            markThreadAsRead(userId);
+            stopInboxPolling();
+            inboxPollInterval = setInterval(refreshThread, 3000);
+        }
+
+        function closeThread() {
+            document.getElementById('inboxThreadModal').classList.remove('show');
+            currentThreadUserId = null;
+            clearQuoteReply();
+            stopInboxPolling();
+        }
+
+        async function refreshThread() {
+            if (!currentThreadUserId) return;
+            try {
+                const data = await callGas('getMessages', { userId: currentThreadUserId });
+                if (!data.success) return;
+                const container = document.getElementById('threadMessages');
+                container.innerHTML = data.messages.map(m => `
+                    <div class="message ${m.direction === 'out' ? 'sent' : 'received'}">
+                        <div class="message-bubble">
+                            ${escapeHtml(m.text)}
+                            <div class="timestamp">${new Date(m.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+                            ${m.direction === 'in' && m.quoteToken ? `<button class="quote-reply-btn" data-quote-token="${escapeAttr(m.quoteToken)}" data-quote-text="${escapeAttr((m.text || '').slice(0, 60))}" onclick="handleQuoteClick(this)">↩ ตอบกลับข้อความนี้</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                container.scrollTop = container.scrollHeight;
+            } catch (_) {}
+        }
+
+        /* ─── Quote Reply ─── */
+        function setQuoteReply(token, preview) {
+            if (!token) return;
+            currentQuoteToken = token;
+            currentQuotePreviewText = preview;
+            renderQuotePreviewBar();
+            document.getElementById('threadReplyInput').focus();
+        }
+
+        function clearQuoteReply() {
+            currentQuoteToken = null;
+            currentQuotePreviewText = '';
+            renderQuotePreviewBar();
+        }
+
+        function renderQuotePreviewBar() {
+            const bar = document.getElementById('quotePreviewBar');
+            if (!bar) return;
+            if (currentQuoteToken) {
+                bar.style.display = 'flex';
+                bar.querySelector('.quote-text').textContent = '↩ ตอบกลับ: ' + currentQuotePreviewText;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function handleQuoteClick(btn) {
+            setQuoteReply(btn.getAttribute('data-quote-token'), btn.getAttribute('data-quote-text'));
+        }
+
+        /* ─── Suggest AI Reply ─── */
+        async function suggestAiReply() {
+            if (!currentThreadUserId) return;
+            const input = document.getElementById('threadReplyInput');
+            const btn = document.getElementById('aiSuggestBtn');
+            let question = input.value.trim();
+
+            if (!question) {
+                try {
+                    const msgs = await callGas('getMessages', { userId: currentThreadUserId });
+                    if (msgs.success && msgs.messages.length) {
+                        const lastIn = [...msgs.messages].reverse().find(m => m.direction === 'in');
+                        question = lastIn ? lastIn.text : '';
+                    }
+                } catch (_) {}
+            }
+
+            if (!question) {
+                showToast('⚠️ ไม่มีข้อความให้ AI ช่วยร่างคำตอบ', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            const origLabel = btn.textContent;
+            btn.textContent = '🤖 กำลังคิด...';
+            try {
+                const { provider, model } = getSelectedProviderModel();
+                const data = await callGas('suggestAI', { question, provider, model });
+                if (data.success) {
+                    input.value = data.answer;
+                    input.focus();
+                } else {
+                    showToast(`❌ ${data.error || 'AI ร่างคำตอบไม่สำเร็จ'}`, 'error');
+                }
+            } catch (_) {
+                showToast('❌ Connection error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = origLabel;
+            }
+        }
+
+        /* ─── Send Thread Reply ─── */
+        async function sendThreadReply() {
+            const input = document.getElementById('threadReplyInput');
+            const text = input.value.trim();
+            if (!text || !currentThreadUserId) return;
+            input.value = '';
+            const quoteToken = currentQuoteToken;
+            clearQuoteReply();
+            try {
+                const data = await callGas('replyToUser', { userId: currentThreadUserId, message: text, quoteToken });
+                if (data.success) {
+                    await refreshThread();
+                } else {
+                    showToast(`❌ ${data.error || 'ส่งไม่สำเร็จ'}`, 'error');
+                }
+            } catch (_) {
+                showToast('❌ Connection error', 'error');
+            }
+        }
+
+        /* ──────────────── Status Check ──────────────── */
+        async function checkStatus() {
+            try {
+                const data = await callGas('status');
+                const dot = document.getElementById('statusDot');
+                const txt = document.getElementById('statusText');
+                if (data.status === 'online') {
+                    dot.className = 'status-dot';
+                    txt.textContent = 'ONLINE';
+                } else {
+                    dot.className = 'status-dot offline';
+                    txt.textContent = 'OFFLINE';
+                }
+                if (!data.channelTokenConfigured) {
+                    showToast('⚠️ Channel Token ไม่ได้ตั้งค่า', 'error');
+                }
+            } catch (_) {
+                document.getElementById('statusDot').className = 'status-dot offline';
+                document.getElementById('statusText').textContent = 'OFFLINE';
+            }
+        }
+
+        /* ──────────────── Init ──────────────── */
+        loadAiProviders();
+        checkStatus();
+        setInterval(checkStatus, 30000);
+        console.log('🕹️ LINE BOT MCP — Dark Mode ready');
+    </script>
+</body>
+</html>
