@@ -243,6 +243,26 @@
             padding-right: 2px;
         }
 
+        .read-status {
+            font-size: 10px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+        .msg.sent .read-status {
+            justify-content: flex-end;
+            color: #8a8a8a;
+        }
+        .read-status.read {
+            color: #00b900;
+        }
+        .read-status.sent {
+            color: #999;
+        }
+
         .msg .meta {
             font-size: 10px;
             color: var(--text-muted);
@@ -1042,9 +1062,7 @@
                                 <i class="fas fa-eye" id="passwordToggleIcon"></i>
                             </button>
                         </div>
-                        <div class="login-hint">
-                            💡 <strong>รหัสผ่าน: 654321</strong>
-                        </div>
+                        <div style="font-size:11px;color:#888;text-align:center;margin-top:6px;">กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ</div>
                     </div>
                 `,
                 confirmButtonText: 'เข้าสู่ระบบ 🚀',
@@ -1126,7 +1144,7 @@
             await Swal.fire({
                 icon: 'error',
                 title: '❌ รหัสผ่านไม่ถูกต้อง',
-                text: 'กรุณากรอกรหัสผ่านให้ถูกต้อง (รหัสผ่าน: 654321)',
+                text: 'กรุณากรอกรหัสผ่านให้ถูกต้อง',
                 confirmButtonText: 'ลองใหม่'
             });
             showLogin();
@@ -1243,15 +1261,75 @@
             showToast('🗑️ ล้างแชทแล้ว', 'success');
         }
 
+        /* ──────────────── IMAGE COMPRESS (ลดขนาดไฟล์ก่อนอัปโหลด) ──────────────── */
+        /**
+         * บีบอัดรูปด้วย canvas ให้ขนาดไม่ใหญ่เกินไปสำหรับ LINE/Drive
+         * - ย่อด้านยาวสุดไม่เกิน maxSize (default 1280px)
+         * - แปลงเป็น JPEG quality 0.72 เพื่อลดไฟล์ (ถ้าต้นทางเป็น PNG โปร่งใสจะได้ JPEG พื้นขาว)
+         * - ถ้ารูปเล็กอยู่แล้ว (< 400KB) จะคืนไฟล์เดิมเพื่อรักษาคุณภาพ
+         */
+        async function compressImageFile(file, maxSize = 1280, quality = 0.72) {
+            if (!file.type.startsWith('image/')) return file;
+            // ไฟล์เล็กอยู่แล้ว ไม่ต้องบีบอัด
+            if (file.size < 400 * 1024) return file;
+            // gif ไม่บีบอัด (จะเสีย animation)
+            if (file.type === 'image/gif') return file;
+            try {
+                const dataUrl = await new Promise((res, rej) => {
+                    const r = new FileReader();
+                    r.onload = () => res(r.result);
+                    r.onerror = rej;
+                    r.readAsDataURL(file);
+                });
+                const img = await new Promise((res, rej) => {
+                    const i = new Image();
+                    i.onload = () => res(i);
+                    i.onerror = rej;
+                    i.src = dataUrl;
+                });
+                let { width, height } = img;
+                // คำนวณขนาดใหม่ให้ด้านยาวสุด = maxSize
+                if (width > maxSize || height > maxSize) {
+                    const ratio = Math.min(maxSize / width, maxSize / height);
+                    width = Math.round(width * ratio);
+                    height = Math.round(height * ratio);
+                } else {
+                    // ถึงขนาดไม่เกินแต่ไฟล์ใหญ่ อาจลด quality อย่างเดียว
+                    // ถ้าไม่ย่อขนาดและไฟล์ < 900KB ให้คืนไฟล์เดิม
+                    if (file.size < 900 * 1024) return file;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                // พื้นหลังขาวสำหรับกรณี PNG โปร่งใส -> JPEG
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                // เลือก mime: ถ้าต้นทางเป็น png แต่มีโปร่งใส เราก็แปลงเป็น jpeg เพื่อลดขนาด
+                const outMime = 'image/jpeg';
+                const outDataUrl = canvas.toDataURL(outMime, quality);
+                const compressed = dataURLtoFile(outDataUrl, (file.name.replace(/\.[^.]+$/, '') || 'image') + '.jpg');
+                console.log(`🗜️ compress: ${(file.size/1024).toFixed(0)}KB -> ${(compressed.size/1024).toFixed(0)}KB (${width}x${height} q=${quality})`);
+                // ถ้าบีบอัดแล้วใหญ่กว่าเดิม ให้ใช้ไฟล์เดิม
+                return compressed.size < file.size ? compressed : file;
+            } catch (e) {
+                console.warn('compress failed, use original', e);
+                return file;
+            }
+        }
+
         /* ──────────────── IMAGE UPLOAD TO GOOGLE DRIVE ──────────────── */
         async function uploadImageToDrive(file) {
             try {
-                const base64 = await fileToBase64(file);
+                // บีบอัดก่อนอัปโหลดเพื่อลดขนาดไฟล์ (ไฟล์ไม่ต้องใหญ่มาก)
+                const compressed = await compressImageFile(file, 1280, 0.72);
+                const base64 = await fileToBase64(compressed);
                 const data = await callGas('uploadToDrive', {
                     folderId: GOOGLE_DRIVE_FOLDER_ID,
                     image: base64,
-                    filename: file.name || 'image.jpg',
-                    mimeType: file.type || 'image/jpeg'
+                    filename: compressed.name || file.name || 'image.jpg',
+                    mimeType: compressed.type || 'image/jpeg'
                 });
                 return data;
             } catch (error) {
@@ -1266,16 +1344,18 @@
         }
 
         async function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const origFile = event.target.files[0];
+            if (!origFile) return;
 
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB)', 'error');
+            if (!origFile.type.startsWith('image/')) {
+                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
                 event.target.value = '';
                 return;
             }
-            if (!file.type.startsWith('image/')) {
-                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+            // บีบอัดก่อนพรีวิว เพื่อให้เห็นขนาดจริงที่จะส่ง
+            const file = await compressImageFile(origFile, 1280, 0.72);
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB หลังบีบอัด)', 'error');
                 event.target.value = '';
                 return;
             }
@@ -1296,14 +1376,15 @@
                 const data = await uploadImageToDrive(file);
                 removeTyping();
 
-                if (data.success && data.lh3Url) {
-                    // ส่งรูปเป็น type image ผ่าน LINE
+                if (data.success && (data.lh3Url || data.imageUrl)) {
+                    const lh3 = data.lh3Url || data.imageUrl;
+                    // ส่งรูปเป็น type image ผ่าน LINE (lh3)
                     const sendData = await callGas('sendImage', {
-                        imageUrl: data.lh3Url,
-                        message: '📷 รูปภาพที่ส่ง'
+                        imageUrl: lh3,
+                        message: ''
                     });
                     if (sendData.success) {
-                        addSystemMessage('✅ ส่งรูปภาพสำเร็จ!');
+                        addSystemMessage('✅ ส่งรูปภาพสำเร็จ! (lh3)');
                         showToast('✅ ส่งรูปภาพสำเร็จ', 'success');
                     } else {
                         addMessage(`❌ ${sendData.error || 'ส่งรูปไม่สำเร็จ'}`, 'received');
@@ -1325,17 +1406,19 @@
             document.getElementById('threadImageInput').click();
         }
 
-        function handleThreadImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        async function handleThreadImageUpload(event) {
+            const origFile = event.target.files[0];
+            if (!origFile) return;
 
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB)', 'error');
+            if (!origFile.type.startsWith('image/')) {
+                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
                 event.target.value = '';
                 return;
             }
-            if (!file.type.startsWith('image/')) {
-                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+            // บีบอัดก่อนแสดงพรีวิวและเก็บไว้ส่งจริง (ไฟล์ไม่ต้องใหญ่มาก)
+            const file = await compressImageFile(origFile, 1280, 0.72);
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('⚠️ รูปภาพมีขนาดใหญ่เกินไป (สูงสุด 5MB หลังบีบอัด)', 'error');
                 event.target.value = '';
                 return;
             }
@@ -1348,6 +1431,7 @@
                 const img = document.getElementById('threadPreviewImg');
                 img.src = e.target.result;
                 preview.style.display = 'flex';
+                showToast(`🗜️ บีบอัดแล้ว ${(file.size/1024).toFixed(0)}KB พร้อมส่ง`, 'success');
             };
             reader.readAsDataURL(file);
             event.target.value = '';
@@ -1662,6 +1746,16 @@
                     const isUnread = isConversationUnread(c);
                     const avatar = c.pictureUrl || '';
                     const prefix = c.lastDirection === 'out' ? '↩ ' : '';
+                    let statusHtml = '';
+                    if (c.lastDirection === 'out') {
+                        if (c.lastOutStatus === 'read') {
+                            statusHtml = '<span style="color:#00b900;font-size:10px;font-weight:600;"><i class="fas fa-check-double"></i> อ่านแล้ว</span>';
+                        } else {
+                            statusHtml = '<span style="color:#999;font-size:10px;"><i class="fas fa-check"></i> ส่งแล้ว</span>';
+                        }
+                    } else if (isUnread) {
+                        statusHtml = '<span style="color:#00b900;font-size:10px;font-weight:600;">● ยังไม่ได้อ่าน</span>';
+                    }
                     return `
                         <div class="msg received" style="cursor:pointer;max-width:100%;"
                              onclick="openThread('${escapeAttr(c.userId)}', '${escapeAttr(c.displayName)}', '${escapeAttr(avatar)}')">
@@ -1670,7 +1764,7 @@
                                 <div style="flex:1;min-width:0;">
                                     <div style="font-weight:600;font-size:14px;">${escapeHtml(c.displayName)} ${isUnread ? '<span style="color:#00b900;font-size:11px;">● ใหม่</span>' : ''}</div>
                                     <div style="color:#999;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${prefix}${escapeHtml((c.lastText || '').slice(0, 50))}</div>
-                                    <div style="color:#bbb;font-size:10px;margin-top:2px;">${new Date(c.lastTimestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+                                    <div style="display:flex;align-items:center;gap:8px;margin-top:2px;"><span style="color:#bbb;font-size:10px;">${new Date(c.lastTimestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>${statusHtml}</div>
                                 </div>
                                 <i class="fas fa-chevron-right" style="color:#ccc;"></i>
                             </div>
@@ -1717,16 +1811,27 @@
                 const data = await callGas('getMessages', { userId: currentThreadUserId });
                 if (!data.success) return;
                 const container = document.getElementById('threadMessages');
-                container.innerHTML = data.messages.map(m => `
+                container.innerHTML = data.messages.map(m => {
+                    let statusHtml = '';
+                    if (m.direction === 'out') {
+                        if (m.readStatus === 'read') {
+                            statusHtml = '<div class="read-status read"><i class="fas fa-check-double"></i> อ่านแล้ว</div>';
+                        } else {
+                            statusHtml = '<div class="read-status sent"><i class="fas fa-check"></i> ส่งแล้ว</div>';
+                        }
+                    }
+                    return `
                     <div class="msg ${m.direction === 'out' ? 'sent' : 'received'}">
                         <div class="msg-bubble">
                             ${escapeHtml(m.text)}
                             ${m.imageUrl ? `<img src="${escapeAttr(m.imageUrl)}" class="msg-image" style="max-width:150px;max-height:200px;border-radius:8px;margin-top:4px;cursor:pointer;" onclick="window.open('${escapeAttr(m.imageUrl)}','_blank')" />` : ''}
                             <div class="timestamp">${new Date(m.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+                            ${statusHtml}
                             ${m.direction === 'in' && m.quoteToken ? `<button class="quote-reply-btn" data-quote-token="${escapeAttr(m.quoteToken)}" data-quote-text="${escapeAttr((m.text || '').slice(0, 60))}" onclick="handleQuoteClick(this)">↩ ตอบกลับข้อความนี้</button>` : ''}
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
                 container.scrollTop = container.scrollHeight;
             } catch (_) {}
         }
