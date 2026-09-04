@@ -745,8 +745,12 @@
 
         <!-- Chat Area -->
         <div class="chat-area" id="chatMessages">
-            <div class="msg system">
-                <div class="msg-bubble">👋 สวัสดี! ระบบพร้อมใช้งานแล้ว</div>
+            <!-- ข้อความเริ่มต้น (default) แสดงเป็นบับเบิลข้อความปกติ -->
+            <div class="msg received">
+                <div class="msg-bubble">
+                    👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
+                    <span style="color: #999; font-size: 12px;">พิมพ์ข้อความเพื่อส่ง หรือใช้เครื่องมือด้านล่าง</span>
+                </div>
             </div>
         </div>
 
@@ -896,9 +900,13 @@
         }
 
         function clearChat() {
+            // ล้างทั้งหมดแล้วเพิ่มข้อความเริ่มต้นแบบเดียวกับตอนโหลดหน้า
             chatMessages.innerHTML = `
-                <div class="msg system">
-                    <div class="msg-bubble">💬 แชทถูกล้างแล้ว</div>
+                <div class="msg received">
+                    <div class="msg-bubble">
+                        👋 สวัสดี! ระบบพร้อมใช้งานแล้ว<br>
+                        <span style="color: #999; font-size: 12px;">พิมพ์ข้อความเพื่อส่ง หรือใช้เครื่องมือด้านล่าง</span>
+                    </div>
                 </div>
             `;
             showToast('🗑️ ล้างแชทแล้ว', 'success');
@@ -1178,9 +1186,7 @@
 
         /* ─── Open Inbox ─── */
         function openInbox() {
-            // เปิด modal และโหลดรายการล่าสุด
             document.getElementById('threadModal').classList.add('show');
-            // ใช้ API getConversations เพื่อแสดงรายการ
             loadInboxList();
         }
 
@@ -1195,7 +1201,6 @@
                     `;
                     return;
                 }
-                // แสดงรายการใน threadMessages
                 const container = document.getElementById('threadMessages');
                 container.innerHTML = data.conversations.map(c => {
                     const isUnread = isConversationUnread(c);
@@ -1219,7 +1224,6 @@
                 document.getElementById('threadName').textContent = '📥 กล่องข้อความ';
                 document.getElementById('threadAvatar').src = '';
                 document.getElementById('threadMessages').scrollTop = 0;
-                // ปิด quote bar
                 document.getElementById('quotePreviewBar').style.display = 'none';
             } catch (e) {
                 document.getElementById('threadMessages').innerHTML = `
