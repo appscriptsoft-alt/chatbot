@@ -1669,16 +1669,12 @@
         }
 
         function isConversationUnread(c) {
-            // optimistic: ถ้าแอดมินเพิ่งเปิดอ่าน (lastSeen > lastTimestamp) ให้ถือว่าอ่านแล้วทันที
-            const lastSeen = lastSeenIn[c.userId] ? new Date(lastSeenIn[c.userId]).getTime() : 0;
-            const lastTime = new Date(c.lastTimestamp).getTime();
-            if (lastSeen > lastTime) return false;
-            // ถ้า server ส่ง unreadCount/isUnread มา ให้ใช้ค่านั้น (persistent)
+            // ใช้ค่าจาก server (Sheet!I) เป็นหลัก — persistent ข้ามเครื่อง
             if (typeof c.unreadCount === 'number') return c.unreadCount > 0;
             if (typeof c.isUnread === 'boolean') return c.isUnread;
             if (c.lastDirection !== 'in') return false;
             const seen = lastSeenIn[c.userId];
-            return !seen || lastTime > new Date(seen).getTime();
+            return !seen || new Date(c.lastTimestamp) > new Date(seen);
         }
 
         async function markThreadAsRead(userId) {
@@ -1832,22 +1828,18 @@
                 const data = await callGas('getMessages', { userId: currentThreadUserId });
                 if (!data.success) return;
                 const container = document.getElementById('threadMessages');
-                const lastSeenTs = lastSeenIn[currentThreadUserId] ? new Date(lastSeenIn[currentThreadUserId]).getTime() : 0;
                 container.innerHTML = data.messages.map(m => {
-                    const msgTime = new Date(m.timestamp).getTime();
-                    // optimistic: ถ้าแอดมินเพิ่งเปิด thread (lastSeen > msgTime) ให้ถือว่า in อ่านแล้วทันที แม้ server ยังไม่ flush
-                    const isIncomingRead = m.isRead || m.readStatus === 'read' || (m.direction === 'in' && lastSeenTs > msgTime);
                     let statusHtml = '';
                     if (m.direction === 'out') {
-                        // out = ส่งจาก inbox ไปปลายทาง — อ่านแล้วต้องอ้างอิง LINE API (มี in ตอบกลับหลัง out) ถึงจะขึ้น
+                        // out = ส่งจาก inbox ไปปลายทาง — อ่านแล้วต้องมี in ตอบกลับหลัง out (อ้างอิง LINE webhook) เท่านั้น
                         if (m.readStatus === 'read') {
                             statusHtml = '<div class="read-status read" title="อ้างอิง LINE: มีข้อความตอบกลับหลังส่ง"><i class="fas fa-check-double"></i> ปลายทางอ่านแล้ว</div>';
                         } else {
                             statusHtml = '<div class="read-status sent" title="รอปลายทางเปิดอ่าน/ตอบกลับ (อ้างอิง LINE webhook)"><i class="fas fa-check"></i> ส่งแล้ว</div>';
                         }
                     } else {
-                        // in = ข้อความจากผู้ใช้: แสดงว่าแอดมินเปิดอ่านหรือยัง (persistent + optimistic)
-                        if (isIncomingRead) {
+                        // in = ข้อความจากผู้ใช้ — อ่านแล้วต่อเมื่อแอดมินเปิด thread (Sheet!I=TRUE ผ่าน markAsRead)
+                        if (m.isRead || m.readStatus === 'read') {
                             statusHtml = '<div class="read-status read" style="justify-content:flex-start;color:#4caf50;"><i class="fas fa-eye"></i> อ่านแล้ว</div>';
                         } else {
                             statusHtml = '<div class="read-status" style="justify-content:flex-start;color:#ff3b30;font-weight:700;"><i class="fas fa-circle" style="font-size:6px;"></i> ยังไม่ได้อ่าน</div>';
